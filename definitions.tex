@@ -9,7 +9,6 @@
 \usepackage[french]{babel}
 % frenchb change les points en tirets, retour à l'original :
 \frenchbsetup{ItemLabeli=$\bullet$}
-
 %-------------------------------------------------------------------------- 
 %-------------------------------------------------------------------------- 
 % Fontes
@@ -78,8 +77,8 @@
 \fancyhead[LE]{\leftmark}% Pages paires haut droit : chapitre
 \fancyhead[LO,RE]{}
 % bas de page, mêmes positions
-\fancyfoot[LO,RE]{2020-2021}
-% \fancyfoot[LE,RO]{}
+\fancyfoot[LO,RE]{\annee}
+\fancyfoot[LE,RO]{\classe}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.2pt}% Ligne en haut
 \renewcommand{\footrulewidth}{0pt}% pas en bas
@@ -141,7 +140,7 @@
 % Configuration des listings
 \usepackage{listings}
 \lstset{escapechar = §,%
-        frameround=tttt, frame = lines, linewidth=0.95\textwidth,%
+%        frameround=tttt, frame = lines, linewidth=0.95\textwidth,%
         xleftmargin=0.025\textwidth,%
         breaklines=true,% 
         showstringspaces=false,%
@@ -174,31 +173,47 @@ literate = {à}{{\`a}}1
         basicstyle=\ttfamily\upshape
        }
 \lstMakeShortInline@
-%--- from T. Cousin--------------------------------------
-\usepackage{caption}
-\usepackage{subcaption}
-\captionsetup{font=small,labelfont=bf}
-\captionsetup[sub]{labelsep=period,subrefformat=brace}
-\usepackage{url}
 %--------------------------------------------------------------------------
 % Environnements 
-\newtheoremstyle{definition}%
-              {}%
-              {}%
-              {\itshape}%
-              {-4mm}%
-              {\bfseries}%
-              {}%
-              {\newline}%
-              {\thmname{#1 : }\thmnote{#3}}
-\theoremstyle{definition}
-\newtheorem*{defin}{Définition}
-\theoremstyle{definition}
-\newtheorem*{thm}{Théorème}
-%--------------------------------------------------------------------------
-% Un résumé en début de chapitre
-\newenvironment{abstract}{\begin{minipage}{0.2\linewidth} {\Large \bf Résumé} \end{minipage}
-                          \begin{minipage}{0.75\linewidth}\itshape} {\end{minipage}}
+\usepackage[skins, listings, theorems]{tcolorbox}
+\newtcbtheorem[no counter]
+              {defin}% Nom de l'environnement
+              {} % pas de nom
+              {enhanced,
+               before skip=3mm,
+               colback=green!5,
+               colbacktitle=green!35!black,
+               colframe=green!35!black,
+               separator sign = {},
+               attach boxed title to top left = {},
+               fonttitle=\bfseries}
+              {def}
+\newtcbtheorem[auto counter,
+               number within=chapter]
+              {code}% Nom de l'environnement
+              {Code} % pas de nom
+              {enhanced,
+               before skip=3mm,
+               colback=yellow!5,
+               colbacktitle=yellow!50!black,
+               colframe=yellow!35!black,
+               attach boxed title to top left = {},
+               fonttitle=\bfseries}
+              {code}
+% \newtheoremstyle{definition}%
+%               {}%
+%               {}%
+%               {\itshape}%
+%               {-4mm}%
+%               {\bfseries}%
+%               {}%
+%               {\newline}%
+% %              {\thmname{#1 : }\thmnote{#3}}
+%               {\thmnote{#3}}
+% \theoremstyle{definition}
+% \newtheorem*{defin}{Définition}
+% \theoremstyle{definition}
+% \newtheorem*{thm}{Théorème}
 %--------------------------------------------------------------------------
 % Diverses fonctions
 %--------------------------------------------------------------------------
