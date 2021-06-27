@@ -1,0 +1,835 @@
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{DS2 : Logique}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{CCINP 2016, partie I}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+Nous nous intéressons dans cet exercice à l'étude de quelques
+propriétés de la logique propositionnelle tri-valuée. En plus
+des deux valeurs classiques {\bf vrai} notée $\top$ et {\bf faux} notée $\bot$ que peuvent prendre les variables et les expressions, la logique propositionnelle tri-valuée introduit une troisième valeur {\bf indéterminé} notée $?$.
+
+$\mathcal{V}$ est l'ensemble des variables propositionnelles et $\mathcal{F}$
+l'ensemble des formules construites sur $\mathcal{V}$. Pour $A,B\in \mathcal{%
+V}$, les tables de vérités des opérateurs classiques dans cette
+logique propositionnelle sont les suivantes :
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+$A$ & $B$ & $A\wedge B$ \\ 
+\hline
+$\top $ & $\top $ & $\top $ \\
+$\top $ & $\bot $ & $\bot $ \\
+$\top $ & ? & ? \\ 
+$\bot $ & $\top $ & $\bot $ \\
+$\bot $ & $\bot $ & $\bot $ \\ 
+$\bot $ & ? & $\bot $ \\ 
+? & $\top $ & ? \\ 
+? & $\bot $ & $\bot $ \\ 
+? & ? & ? \\ 
+\hline
+\end{tabular}
+\qquad
+\begin{tabular}{|c|c|c|}
+\hline
+$A$ & $B$ & $A\vee B$ 
+\\ \hline
+$\top $ & $\top $ & $\top $ \\ 
+$\top $ & $\bot $ & $\top $ \\ 
+$\top $ & ? & $\top $ \\ 
+$\bot $ & $\top $ & $\top $ \\ 
+$\bot $ & $\bot $ & $\bot $ \\ 
+$\bot $ & ? & ? \\ 
+? & $\top $ & $\top $ \\ 
+? & $\bot $ & ? \\ 
+? & ? & ? \\ 
+\hline
+\end{tabular}%
+\qquad 
+\begin{tabular}{|c|c|c|}
+\hline
+$A$ & $B$ & $A\Rightarrow B$ 
+\\ \hline
+$\top $ & $\top $ & $\top $ \\ 
+$\top $ & $\bot $ & $\bot $ \\ 
+$\top $ & ? & ? \\ 
+$\bot $ & $\top $ & $\top $ \\ 
+$\bot $ & $\bot $ & $\top $ \\ 
+$\bot $ & ? & $\top $ \\ 
+? & $\top $ & $\top $ \\ 
+? & $\bot $ & ? \\ 
+? & ? & $\top $ \\ 
+\hline
+\end{tabular}%
+\qquad 
+\begin{tabular}{|c|c|}
+\hline
+$A$ & $ \neg A$ \\ 
+\hline
+$\top $ & $\bot $ \\ 
+$\bot $ & $\top $ \\ 
+? & ? \\ 
+\hline
+\end{tabular}%
+\end{center}
+
+\subsection*{Définitions et notations}
+
+\begin{enumerate}
+    \item Une tri-valuation est une fonction $f$ de $\mathcal{V}$ vers $\left\{\top ,\bot ,?\right\}$.
+    \item On étend de manière usuelle une tri-valuation sur l'ensemble des formules en une fonction $\widehat{f}$ de $\mathcal{F}$ vers $\left\{\top ,\bot ,?\right\}$.
+    \item Une tri-valuation $\widehat{f}$ satisfait une formule $\phi $ si $\widehat{f}\left( \phi \right) =\top $. 
+    
+    On notera alors $\widehat{f}\vdash_{3} \phi $.
+
+    \item Une formule $\phi $ est une conséquence d'un ensemble de formules $\mathcal{X}$ si toute tri-valuation qui satisfait toutes les formules de $\mathcal{X}$ satisfait $\phi $. 
+
+On notera dans ce cas $\mathcal{X} \Vdash_{3}\phi$.
+\item Une formule $\phi $ est une une tautologie si pour toute tri-valuation $\widehat{f}$, $\widehat{f}(\phi) =\top$. 
+
+On notera dans ce cas $\Vdash_3 \phi$.
+\end{enumerate}
+
+\newpage
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer que $A\vee  \neg A$ n'est pas une tautologie.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Si une valuation $f$ vérifie $f(A)=?$ alors $\widehat f(A\vee \neg A) = .\vee \neg ?= ?$ : $A\vee \neg A$ n'est pas satisfaite par $f$, ce n'est pas une tautologie.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Proposer une tautologie simple dans cette logique.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+On vérifie que $A \Rightarrow A$ est une tautologie.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+On pose $\top =1$, $\bot =0$ et $?=0,5$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Proposer un calcul arithmétique simple permettant de trouver la table de vérité de $A\wedge B$ en fonction de $A$ et $B$. 
+Même question pour $A\vee B$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}On peut généraliser les formule de la logique classique :
+
+$\widehat{f}(A \wedge B)=\min \bigl(f(A), f(B)\bigr) $ et $\widehat{f}(A \vee B)=\max \bigl()f(A), f(B)\bigr) $.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+En logique bi-valuée classique, les propositions $ \neg A\vee B$ et $A\Rightarrow B$ sont équivalentes. 
+
+Qu'en est-il dans le cadre de la logique propositionnelle tri-valuée ?
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Pour une valuation $f$ telle que $f(A) = f(B) = ?$, on a
+
+$\widehat f(\neg A\vee B) = ?$ et  $\widehat f(AQ \Rightarrow B) = \top$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+En écrivant les tables de vérité, indiquer si les propositions $ \neg B\Rightarrow  \neg A$ et $A\Rightarrow B$ sont équivalentes.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+$A$ & $B$ & $A\Rightarrow B$ & $\neg A$ & $\neg B$ & $\neg B\Rightarrow  \neg A$\\ 
+\hline
+$\top $ & $\top $ & $\top $ & $\bot $ & $\bot $ & $\top $ \\ 
+$\top $ & $\bot $ & $\bot $ & $\bot $ & $\top $ & $\bot $  \\ 
+$\top $ &    ?    &    ?    & $\bot $ &    ?    &    ?    \\ 
+$\bot $ & $\top $ & $\top $ & $\top $ & $\bot $ & $\top $ \\ 
+$\bot $ & $\bot $ & $\top $ & $\top $ & $\top $ & $\top $ \\ 
+$\bot $ &    ?    & $\top $ & $\top $ &    ?    & $\top $ \\ 
+   ?    & $\top $ & $\top $ &    ?    & $\bot $ & $\top $ \\ 
+   ?    & $\bot $ &    ?    &    ?    & $\top $ &    ?    \\ 
+   ?    &    ?    & $\top $ &    ?    &    ?    & $\top $ \\ 
+\hline
+\end{tabular}%
+\end{center}
+On a bien l'égalité des évaluations.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Donner la table de vérité de la proposition $F = \bigl( ( A\Rightarrow B\ ) \wedge  (  \neg A\Rightarrow B) \bigr) \Rightarrow B$. 
+
+Cette proposition est-elle une tautologie ?
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+$A$ & $B$ & $A\Rightarrow B$ & $\neg A\Rightarrow B$ & $( A\Rightarrow B\ ) \wedge  (  \neg A\Rightarrow B)$ & $F$\\ 
+\hline
+$\top $ & $\top $ & $\top $ & $\top $ & $\top $ & $\top $ \\ 
+$\top $ & $\bot $ & $\bot $ & $\top $ & $\bot $ & $\top $ \\ 
+$\top $ &    ?    &    ?    & $\top $ &    ?    & $\top $ \\ 
+$\bot $ & $\top $ & $\top $ & $\top $ & $\top $ & $\top $ \\ 
+$\bot $ & $\bot $ & $\top $ & $\bot $ & $\bot $ & $\top $ \\ 
+$\bot $ &    ?    & $\top $ &    ?    &    ?    & $\top $ \\ 
+   ?    & $\top $ & $\top $ & $\top $ & $\top $ & $\top $ \\ 
+   ?    & $\bot $ &    ?    &    ?    &    ?    &    ?    \\ 
+   ?    &    ?    & $\top $ & $\top $ & $\top $ &    ?    \\ 
+\hline
+\end{tabular}%
+\end{center}
+En raison des deux dernières lignes, ce n'est pas une tautologie.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+Un nouvel opérateur d'implication, noté $\rightarrow $, est défini par sa table de vérité.
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+$A$ & $B$ & $A\rightarrow B$ \\ 
+\hline
+$\top $ & $\top $ & $\top $ \\ 
+$\top $ & $\bot $ & $\bot $ \\
+$\top $ & ? & ? \\ 
+$\bot $ & $\top $ & $\top $ \\ 
+$\bot $ & $\bot $ & $\top $ \\
+$\bot $ & ? & $\top $ \\ 
+? & $\top $ & $\top $ \\
+? & $\bot $ & ? \\ 
+? & ? & ? \\ 
+\hline
+\end{tabular}%
+\end{center}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+$A\rightarrow A$ est-il une tautologie ?
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Si $f(A)=?$ alors $\widehat f(A\rightarrow A) = ?$, $A\rightarrow A$ n'est pas une tautologie. 
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer qu'il n'existe aucune tautologie pour les formules construites avec les opérateurs $\neg$, $\vee$, $\wedge$ et $\rightarrow$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+On voit que, si $\widehat f(\phi)=\widehat f (\psi) = ?$ alors $\widehat f(\neg\phi) = \widehat f(\phi \wedge \psi) = \widehat f(\phi \vee \psi) = \widehat f(\phi \rightarrow \psi) = ?$
+
+On choisit la valuation telle que $f(P) = ?$ pour toute variable alors, par induction structurelle, $\widehat(\phi) = ?$ pour toute formule. Ainsi aucune formule n'est une tautologie.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+{\sf Je ne reproduis pas la question suivante qui n'a pas de sens, le rapport parle de "{\it Question facile mais dont la formulation semble avoir dérouté la majorité des candidats}". De la pure langue de bois.}
+
+
+\newpage
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Mines 2014, partie II}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsubsection*{Recommandations}
+%-------------------------------------------------------------------------------
+\begin{itemize}
+\item Si, au cours de l'épreuve, un candidat repère ce qui lui semble être une erreur d'énoncé, il le signale sur sa copie et poursuit sa composition en expliquant les raisons des initiatives qu'il est amené à prendre.
+%-------------------------------------------------------------------------------
+\item Tout résultat fourni dans l'énoncé peut être utilisé pour les questions ultérieures même s'il n'a pas été démontré.
+%-------------------------------------------------------------------------------
+\item Il ne faut pas hésiter à formuler les commentaires qui semblent pertinents même lorsque l'énoncé ne le demande pas explicitement.
+%-------------------------------------------------------------------------------
+\item Lorsque le candidat écrira une fonction ou une procédure, il pourra faire appel à une autre fonction ou procédure définie dans les questions précédentes ; il pourra aussi définir une procédure ou une fonction auxiliaire.
+%-------------------------------------------------------------------------------
+\item Si les paramètres d'une fonction ou d'une procédure à Écrire sont supposés vérifier certaines hypothèses, il ne sera pas utile, dans l'écriture de cette fonction ou de cette procédure, de tester si les hypothèses sont bien vérifiées.  
+%-------------------------------------------------------------------------------
+\item On ne se préoccupera pas d'un éventuel dépassement du plus grand entier codable dans le langage de programmation.
+%-------------------------------------------------------------------------------
+\item Dans les énoncés du problème, un même identificateur écrit dans deux polices de caractères différentes désignera la même entité, mais du point de vue mathématique pour la police en italique ($n$) et du point de vue informatique pour celle caractères de machine à Écrire (\type{n}).
+\end{itemize}
+%-------------------------------------------------------------------------------
+\subsubsection*{Rappel}
+%-------------------------------------------------------------------------------
+Si $n$ et $p$ sont des entiers, l'instruction
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+Array.make_matrix n p false
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+permet de construire une matrice carrée booléenne \type{A} à \type{n} lignes et \type{p} colonnes, et dont les cases sont initialisées à \type{false}. 
+%-------------------------------------------------------------------------------
+\subsubsection*{Notations et définitions}
+%-------------------------------------------------------------------------------
+\begin{itemize}
+    \item On considère un ensemble fini $\Pi$ de $n$ propositions logiques distinctes : $\Pi = \{P_{0}, P_{1}, \ldots, P_{n-1}\}$.
+    \item On suppose qu'un ensemble d'implications entre ces propositions, appelé {\it ensemble des implications initiales} et noté $I$, a déjà été établi.
+    \item On peut en général déduire d'autres implications à partir de l'ensemble des implications initiales en utilisant la transitivité des implications.
+    \item Pour deux propositions $P$ et $Q$ appartenant à $\Pi$, si $Q$ se déduit de $P$ à l'aide d'une suite d'implications appartenant à $I$, on dit que $P$ {\bf implique} $Q$, ce que l'on note $P \Rightarrow Q$.
+    \item  Dans toute la suite, on s'intéresse aux implications que l'on peut déduire de $I$.
+    \item Pour tout $P$ dans $\Pi$, on suppose que $I$ contient l'implication $P \Rightarrow P$ ; une telle implication, nommée {\bf boucle}, est notée $P \Rightarrow_{0} P$.
+    \item Si $P$ et $Q$ sont dans $\Pi$, la notation $P \Rightarrow_{1} Q$ signifie que l'implication $P \Rightarrow Q$ appartient à $I$ (pour tout $P$ dans $\Pi$, on a donc aussi $P \Rightarrow_{1} P$).
+    \item Pour $P$ et $Q$ dans $\Pi$, $P$ implique $Q$ signifie qu'il existe un entier $k \ge  0$ et $k + 1$ propositions $P_{i_{0}}, P_{i_{1}}, \ldots, P_{i_{j}}, P_{i_{(j + 1)}}, \ldots, P_{i_{k}}$ appartenant à $\Pi$ tels que l'on ait :
+        \begin{itemize}
+        \item $P_{i_{0}}=P$,
+        \item $P_{i_{k}}=Q$,
+        \item pour $j$ tel que $0 \le  j \le  k - 1$, l'implication $P_{i_{j}} \Rightarrow P_{i_{(j + 1)}}$ appartient à $I$.
+        \end{itemize}
+   \item Avec les notations ci-dessus, on dit alors qu'il existe une {\bf preuve de longueur $k$ de l'implication} $P \Rightarrow Q$, ce que l'on note $P \Rightarrow_{k} Q$. Les implications de $I$ sont donc les preuves de longueur 0 (si $P = Q$) ou 1.
+\end{itemize}
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\subsubsection*{Exemple}
+%-------------------------------------------------------------------------------
+$I_1=\{P_{0}\Rightarrow_{0}P_{0}, P_{1}\Rightarrow_{0}P_{1}, P_{2}\Rightarrow_{0}P_{2}, 
+     P_{3}\Rightarrow_{0}P_{3}, P_{0}\Rightarrow_{1}P_{2}, P_{2}\Rightarrow_{1}P_{3}, 
+     P_{3}\Rightarrow_{1}P_{0}, P_{3}\Rightarrow_{1}P_{1}\}$.
+
+On a $P_{0} \Rightarrow_2 P_{3}$ car on a
+$P_{0} \Rightarrow_{1} P_{2}$ et $P_{2} \Rightarrow_{1} P_{3}$ ;
+on a aussi $P_{0} \Rightarrow_3 P_{3}$ car on peut ajouter une boucle
+en considérant les trois implications $P_{0} \Rightarrow_{0} P_{0}$,
+$P_{0} \Rightarrow_{1} P_{2}$ et $P_{2} \Rightarrow_{1} P_{3}$.
+
+En revanche, on n'a pas : $P_{0} \Rightarrow_2 P_{1}$.
+
+Les implications qui peuvent être prouvées mais qui n'appartiennent pas à $I$ sont : 
+
+$P_{0} \Rightarrow P_{1}$, $P_{0} \Rightarrow P_{3}$,  $P_{2} \Rightarrow P_{0}$, $P_{2} \Rightarrow P_{1}$,
+$P_{3} \Rightarrow P_{2}$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Implications}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On se donne l'ensemble d'implications initiales pour 4 propositions.
+
+$I_2=\{P_{0}\Rightarrow_{0}P_{0},
+P_{1}\Rightarrow_{0}P_{1}, P_{2}\Rightarrow_{0}P_{2},
+P_{3}\Rightarrow_{0}P_{3}, P_{0}\Rightarrow_{1}P_{1},
+P_{1}\Rightarrow_{1}P_{2}, P_{2} \Rightarrow_{1} P_{1},
+P_{3} \Rightarrow_{1} P_{2}\}$.
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Donner la liste des implications qui peuvent être prouvées mais qui n'appartiennent pas à $I_2$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+$P_0\Rightarrow P_2$ et $P_3\Rightarrow P_1$ sont les implications prouvables qui n'appartiennent pas à $I_2$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Soient $P$ et $Q$ dans $\Pi$ ; soient $h$ et $k$ deux entiers positifs ou nuls vérifiant : $h \le  k$. 
+
+Montrer que si on a $P \Rightarrow_{h} Q$, alors on a aussi $P \Rightarrow_k Q$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}Si on a une preuve de longueur $h$ de $P\Rightarrow Q$,
+
+$P \Rightarrow P_{i_1} \Rightarrow P_{i_2} \Rightarrow \cdots \Rightarrow P_{i_{h-1}} \Rightarrow Q$,
+
+on peut la prolonger en une preuve de longueur $h+1$,
+
+$P \Rightarrow P_{i_1} \Rightarrow P_{i_2} \Rightarrow \cdots \Rightarrow P_{i_{h-1}} \Rightarrow Q \Rightarrow Q$.
+
+Ainsi $P \Rightarrow_{h} Q$ implique $P \Rightarrow_{h+1} Q$ donc, par transitivité, $P \Rightarrow_{h} Q$ implique $P \Rightarrow_{k} Q$ pour $k\ge h$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Soient $P$ et $Q$ dans $\Pi$. 
+
+Montrer qu'il existe une implication $P \Rightarrow Q$ si et seulement si on a $P \Rightarrow_{n - 1} Q$. 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+{\bf Sens réciproque} 
+Si on a $P \Rightarrow_{n - 1} Q$ alors il existe une preuve de l'implication
+$P \Rightarrow Q$.
+
+{\bf Sens direct} On suppose qu'il existe une preuve de l'implication $P \Rightarrow Q$
+
+On considère la preuve de longueur minimale $k$ de cette implication :
+
+$P = P_{i_0} \Rightarrow P_{i_1} \Rightarrow P_{i_2} \Rightarrow \cdots \Rightarrow P_{i_{k-1}} \Rightarrow P_{i_k} = Q$.
+
+Les $k+1$ propositions $P_{i_r}$ sont des éléments de $\Pi$ de cardinal $n$.
+
+Si on avait $k\ge n$ alors deux de ces propositions devraient être égales, $P_{i_r} = P_{i_s}$ avec $r < s$. On pourrait alors supprimer les implications de $I$ entre $r$ et $s$ pour obtenir une preuve de longueur $r + k-s < k$
+$P = P_{i_0} \Rightarrow P_{i_1} \Rightarrow  \cdots \Rightarrow P_{i_r} = P_{i_s} \Rightarrow cdots \Rightarrow P_{i_k} = Q$.
+
+Ceci contredit la minimalité de $k$ donc on doit avoir $k \le n-1$.
+
+D'après l'exercice précédent on déduit de $P \Rightarrow_k Q$ qu'on a $P \Rightarrow_{n - 1} Q$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Matrices booléennes}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Une matrice booléenne est une matrice dont les coefficients prennent uniquement les valeurs {\bf faux} et {\bf vrai} (\type{false} et \type{true} en langage de  programmation). Le produit de matrices booléennes s'obtient selon la formule habituelle en prenant comme somme de deux valeurs booléennes le {\bf ou} logique (disjonction, notée $\lor$) et comme produit le {\bf et} logique (la conjonction, notée $\land$) ; le 
+produit de deux matrices $A$ et $B$ est noté $A \times B$. 
+
+\medskip
+
+Par exemple, si on considère les deux matrices :
+
+$A_{0} = \begin{pmatrix} {\bf vrai} & {\bf vrai} \\ {\bf faux} & {\bf vrai} \end{pmatrix}$
+et $B_{0} = \begin{pmatrix}  {\bf faux} & {\bf vrai} \\  {\bf vrai} & {\bf faux} \end{pmatrix}$, 
+le produit $A_{0} \times B_{0}$ vaut 
+$\begin{pmatrix} {\bf vrai} & {\bf vrai} \\ {\bf vrai} & {\bf faux}\end{pmatrix}$.
+
+On ne s'intéressera dans ce problème qu'à des matrices carrées ; la dimension d'une matrice carrée est son nombre de lignes (et donc de colonnes). Si $k$ est un entier strictement positif, on obtient la matrice $A^{k}$ en multipliant $k - 1$ fois la matrice $A$ par elle-même.
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction nommée \type{mult} telle que, si \type{a} et \type{b} codent $A$ et $B$, alors \type{mult A B} renvoie une matrice codant le produit $A \times B$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let mult a b =
+   let n =Array.length a in
+   let c = Array.make_matrix n n false in
+   for i = 0 to n-1 do
+      for j = 0 to n-1 do
+         for k = 0 to n-1 do
+            c.(i).(j) <- c.(i).(j) || (a.(i).(k) && b.(k).(j)) 
+         done;
+      done;
+   done;
+   c;;  
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\newpage
+
+ On considère un ensemble $\Pi$ des $n$ propositions logiques $P_{0}$, $P_{1}, \ldots, P_{n-1}$ et un ensemble $I$ d'implications initiales entre ces propositions. On leur associe une matrice $A$ carrée booléenne de dimension $n$ définie de la façon suivante :
+    \begin{itemize}
+        \item les lignes et les colonnes de $A$ sont indicées de 0 à $n-1$;
+	\item soient $i$ et $j$ deux entiers vérifiant $0\le i, j\le n-1$, en notant $A[i,j]$ le coefficient de $A$ situé sur la ligne d'indice $i$ et la colonne d'indice $j$, $A[i, j]$ vaut {\bf vrai} si et seulement si l'implication $P_{i} \Rightarrow P_{j}$ appartient à $I$.
+\end{itemize}
+
+Ainsi, les matrices $A_1$ et $A_2$ correspondant respectivement aux ensembles d'implications initiales $I_1$ et $I_2$ sont :
+    
+\[A_1 = \begin{pmatrix} {\bf vrai} & {\bf faux} & {\bf vrai} & {\bf faux} \\ 
+                        {\bf faux} & {\bf vrai} & {\bf faux} & {\bf faux} \\
+                        {\bf faux} & {\bf faux} & {\bf vrai} & {\bf vrai} \\ 
+                        {\bf vrai} & {\bf vrai} & {\bf faux} & {\bf vrai} \end{pmatrix}
+\quad A_2 = \begin{pmatrix} {\bf vrai} & {\bf vrai} & {\bf faux} & {\bf faux} \\
+                            {\bf faux} & {\bf vrai} & {\bf vrai} & {\bf faux} \\
+                            {\bf faux} & {\bf vrai} & {\bf vrai} & {\bf faux} \\
+                            {\bf faux} & {\bf faux} & {\bf vrai} & {\bf vrai}
+                            \end{pmatrix}\]
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer que, pour $i$ et $j$ vérifiant  $0 \le  i, j \le  n - 1$ et pour tout $k$ strictement positif, le coefficient $A^k[i, j]$ vaut {\bf vrai} si et seulement si on a $P_{i} \Rightarrow_{k} P_{j}$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+On montre le résultat par récurrence sur $k$ :
+
+${\cal P}(k)$ : le coefficient $A^k[i, j]$ vaut {\bf vrai} si et seulement si on a $P_{i} \Rightarrow_{k} P_{j}$.
+
+${\cal P}(1)$ est vraie par définition de la matrice $A$.
+
+On suppose que ${\cal P}(k)$ est vérifiée.
+
+On a $\displaystyle A^{k+1}[i, j] = \bigvee_{r=0}^{n-1} A^{k}[i, r]\wedge A[r, j]$
+
+\begin{itemize}
+\item Si $A^{k+1}[i, j]$ vaut {\bf vrai} alors il existe (au moins) un entier $r$ tel que $A^{k}[i, r]\wedge A[r, j]$ vaut {\bf vrai} d'où $A^{k}[i, r]$ et $A[r, j]$ valent {\bf vrai}. 
+
+En utilisant ${\cal P}(k)$ et la définition de $A$ on en déduit qu'on a $P_i \Rightarrow_k P_r$ et $P_r \Rightarrow P_j \in I$. 
+
+En concaténant on en déduit une preuve de longueur $k+1$,  $P_i \Rightarrow_{k+1} P_j$.
+
+\item Si on a $P_i \Rightarrow_{k+1} P_j$, on en écrit une preuve :
+
+$P_i = P_{i_0} \Rightarrow P_{i_1} \Rightarrow P_{i_2} \Rightarrow \cdots \Rightarrow P_{i_k} \Rightarrow P_{i_{k+1}} = P_j$.
+
+Le début fournit une preuve de longueur $k$ : $P_i \Rightarrow_{k} P_{i_k}$ donc $A^k[i, i_k]$ vaut {\bf vrai} d'après l'hypothèse de récurrence. De plus $P_{i_k} \Rightarrow P_j$ appartient à $I$ donc $A[i_k, j]$ vaut {\bf vrai}.
+
+On en déduit que $A^{k}[i, i_k]\wedge A[i_k, j]$ vaut {\bf vrai} puis
+$\displaystyle A^{k+1}[i, j] = \bigvee_{r=0}^{n-1} A^{k}[i, r]\wedge A[r, j]$  aussi.
+\end{itemize}
+
+On a donc prouvé l'équivalence souhaitée au rang $k+1$ : ${\cal P}(k+1)$ est vérifiée.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer que, pour tout $k\ge n-1$, on a $A^k =A^{n-1}$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}On utilise l'équivalence ci-dessus.
+
+D'après la question 3), $A^k[i, j]$ vaut {\bf vrai} implique $A^{n-1}[i, j]$ vaut {\bf vrai} pour tout $k$.
+
+D'après la question 2), $A^{n-1}[i, j]$ vaut {\bf vrai} implique $A^k[i, j]$ vaut {\bf vrai} pour tout $k\ge n-1$.
+
+Ainsi, pour $k\ge n-1$, $A^k[i, j]$ vaut {\bf vrai} si et seulement si $A^{n-1}[i, j]$ vaut {\bf vrai}  
+
+donc $A^k[i, j] = A^{n-1}[i, j]$ pour tous $i$ et $j$ : $A^k =A^{n-1}$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsubsection{Fermeture transitive}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On appelle {\bf fermeture transitive} de $A$ et on note $FT(A)$
+    la matrice $A^{n - 1}$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une  fonction \type{fermeture} telle que,  si \type{a} code une matrice booléenne $A$, alors \type{fermeture a} renvoie la matrice $FT(A)$. On pourra supposer qu'on a $n\ge 2$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let fermeture a = 
+   let n = Array.length a in
+   let res = ref a in
+   for i = 1 to (n-2) do
+      res := mult !res a done;
+   !res;;        
+
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{deduction} telle que si :
+\begin{itemize}
+\item \type{a} code $A$, matrice booléenne associée à un ensemble des implications initiales,
+\item \type{i} est un entier compris entre 0 et $n - 1$,
+\end{itemize}
+alors \type{deduction a i} renvoie un tableau de booléens de longueur $n$ tel que, pour $j$ compris entre 0 et $n - 1$, la valeur d'indice \type{j} de ce tableau vaut \type{true} si et seulement si on a $P_{i}\Rightarrow P_{j}$.
+
+{\bf ATTENTION} : On exige que la complexité de cette fonction soit un ${\cal O}(n^2)$. On utilisera pour cela la récursivité. On ne justifiera pas la complexité de la fonction qui sera écrite.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Pour chaque proposition $P$ qu'on a pu déduire, on peut déduire aussi les conséquence de $P$ dans $I$. Le tableau de booléens sert aussi à tester si une proposition a déjà été vue. On utilise une fonction auxiliaire.
+\begin{lstlisting}
+let deduction a i =
+   let n = Array.length a in
+   let deduit = Array.make n false in
+      let rec voir k = 
+         if not deduit.(k)
+         then begin
+            deduit.(k) <- true;
+            for j = 0 to n-1 do
+               if a.(k).(j) then voir j done
+         end in
+    voir i;
+  deduit;;    
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+En utilisant la fonction \type{deduction}, écrire une fonction \type{fermeture\_bis} telle que si \type{a} code une matrice booléenne $A$, alors \type{fermeture\_bis A} renvoie la matrice  $FT(A)$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let fermeture_bis a =
+   let n = Array.length a in
+   let res = Array.make  n [||] in
+   for i = 0 to n-1 do
+      res.(i) <- deduction a i done;
+   res;;    
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Propositions équivalentes}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Dans toute la suite la fermeture transitive $B = FT(A)$ de la matrice $A$ représentant un ensemble d'implications initiales $I$ sera appelée {\bf matrice des implications}.
+
+Soient $P$ et $Q$ deux propositions appartenant à $\Pi$.
+
+On dit que les propositions $P$ et $Q$ sont {\bf équivalentes} si on a :
+$P \Rightarrow Q$ et $Q \Rightarrow P$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsubsection{Axiomes}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Soit $P$ appartenant à $\Pi$. On dit ici que $P$ est un axiome si on a la propriété suivante : quelle que soit la proposition $Q$ appartenant à $\Pi$, si on a $Q\Rightarrow P$, alors on a aussi $P\Rightarrow Q$ et donc $P$ et $Q$ sont équivalentes ; autrement dit, $P$ est équivalente à toute proposition qui l'implique.  
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Donner tous les axiomes dans les exemples donnés par $I_1$ et $I_2$ ci-dessus.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}Les axiomes de $I_1$ sont $P_{0}$, $P_{2}$ et ceux de $I_2$ sont $P_{0}$ et $P_{3}$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{est\_axiome} telle que si \type{b} code une matrice des implications et si \type{i} est un entier compris entre 0 et $n - 1$, alors \type{est\_axiome b i} renvoie la valeur \type{true} si $P_{i}$ est un axiome et la valeur \type{false} sinon.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let est_axiome b i =
+   let res = ref true in
+   let n = Array.length b in
+      for j = 0 to n-1 do
+         if b.(j).(i) then res := !res && b.(i).(j) done;
+    !res;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+On appelle suite unidirectionnelle une suite $(Q_{0}, Q_{1}, \ldots, Q_{h})$ de propositions de $\Pi$ telle que :
+\begin{enumerate}
+\item pour $i$ vérifiant $0\le i\le h-1$, $Q_{i} \Rightarrow Q_{i+1}$,
+\item pour $i$ vérifiant $0\le i\le h-1$, $Q_{i+1}$ n'implique pas $Q_{i}$.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer que les propositions d'une suite unidirectionnelle sont deux à deux distinctes. 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+On considère une suite  unidirectionnelle de propositions 
+$(Q_{0},Q_{1},...,Q_{h})$.
+
+S'il existait $i< j$ tels que $Q_i = Q_j$ alors la suite d'implications 
+$Q_{i+1}\Rightarrow \cdots \Rightarrow Q_{j} = Q_i$ donnerait l'implication $Q_{i+1}\Rightarrow Q_i$, ce qui est exclu.
+
+Ainsi les propositions d'une suite  unidirectionnelle sont distinctes.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Soit $Q$ une proposition appartenant à $\Pi$.
+Montrer qu'il existe un axiome $P$ avec $P \Rightarrow Q$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Soit $Q\in \Pi$. 
+
+Les suites unidirectionnelles qui aboutissent à $Q$ ont des éléments distincts donc elle doivent être de longueur $n-1$ au plus. Comme il existe au moins la suite unidirectionnelle de longueur 0, $(Q)$, il existe une suite unidirectionnelle qui aboutit à $Q$ de longueur maximale :  $(Q_{0},...,Q_{p})$ avec $Q_p=Q$.
+
+
+Si $Q_0$ n'était pas un axiome, il existerait une proposition $p$ telle que $P \Rightarrow Q_0$ et $Q_0$ n'implique pas $P$.  On pourrait alors définir une suite unidirectionnelle plus longue : $(P, Q_{0},...,Q_{p})$ ce qui est impossible.
+
+Ainsi $Q_0$ est un axiome et $Q$ est impliquée par un axiome..
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsubsection{Classes d'équivalence}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+La relation est une relation d'équivalence. On peut donc partitionner $\Pi$ en sous-ensembles de sorte que deux propositions de $\Pi$ soient équivalentes si et seulement si elles appartiennent au même sous-ensemble. On appelle {\bf classes d'équivalence} ces sous-ensembles.
+
+% Par définition les classes d'équivalence sont non vides, l'union des classes d'équivalence est égale à $\Pi$ et l'intersubsection de deux classes d'équivalence est vide.
+
+Pour $I_1$, il y a deux classes d'équivalence :  $\{P_{0}, P_{2}, P_{3}\}$ et $\{P_{1}\}$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Donner les classes d'équivalence pour $I_2$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+Les classes d'équivalence pour $I_2$ sont $\{P_{0}\}$, $\{P_{1},P_{2}\}$ et $\{P_{3}\}$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+On considère une classe d'équivalence $C$ contenant un axiome.
+
+Montrer que toutes les propositions contenues dans $C$ sont des axiomes.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+$P$ est un axiome et $C$ est sa classe d'équivalence.
+
+Pour toute proposition $Q\in C$, on considère $Q'$ tellle que $Q'\Rightarrow Q$. 
+
+Comme on a $Q\Rightarrow P$, on a aussi  $Q'\Rightarrow P$ puis, comme $P$ est un axiome, $P\Rightarrow Q'$.
+
+En utilisant $Q\Rightarrow P$, on en déduit  $Q\Rightarrow Q'$. 
+Ainsi $Q$ est un axiome.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+On dit qu'une classe d'équivalence est une {\bf classe source} si elle contient un axiome.
+    
+Une partie $X$ de $\Pi$ est une {\bf axiomatique} si, quelle que soit la proposition $Q\in \Pi$, il existe une proposition $P$ appartenant à $X$ vérifiant $P \Rightarrow Q$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer qu'on obtient une axiomatique de cardinal minimum  en choisissant une et une seule proposition dans chacune des classes sources. 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} On décompose en plusieurs étapes. $X$ est une axiomatique
+
+\begin{enumerate}
+    \item Si $P$ est un axiome, il existe $Q\in P$ tel que $Q\Rightarrow P$ donc, d'après la définition $Q$ est équivalent à $P$. Ainsi $X$ doit contenir un élément de la classe de $P$.
+    
+    {\bf Toute axiomatique contient au moins un élément de chaque classe source.}
+    \item Si $X$ contient deux propositions d'une même classe source, $P_1$ et $P_2$, alors $X' = X\setminus \{P_2\}$ est encore une axiomatique. En effet, toute proposition déduite de $P_2$ est aussi déduite de $P_1$.
+    {\bf Toute axiomatique minimale contient au plus un élément de chaque classe source.}
+    \item Si $X$ contient une proposition $P$ qui n'est pas un axiome  alors $P$ est déduite d'un axiome $Q$ donc, comme $X$ contient un élément de la classe de $Q$, $P$ est déduit d'un élément de $X$. On peut alors retirer $P$ : $X\setminus \{P\}$ est encore une axiomatique.
+        {\bf Toute axiomatique minimale ne contient que des axiomes.}
+\end{enumerate}
+
+Ainsi tout axiomatique minimale est formée d'axiomes avec un axiome unique par classe source.
+
+Inversement en choisissant un élément unique dans chaque classe source on obtient une axiomatique car tout élément est déduit d'un axiome que l'ont peut choisir indistinctement dans sa classe et le premier point montre que cette axiomatique est minimale.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{axiomatique} telle que, si \type{B} code une matrice des implications, alors \type{axiomatique B} renvoie une liste d'entiers contenant les indices de propositions de $\Pi$ formant une axiomatique de cardinalminimum.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+On parcourt les proposition. Pour chaque proposition non encore déduite qui est un axiome, on l'ajoute aux axiomes et et marque comme déduites toutes ses conséquences.
+\begin{lstlisting}
+let axiomatique b =
+   let n = Array.length b in
+   let ax = Array.make n false in
+   let deduit = Array.make n false in
+      for i = 0 to n-1 do
+         if (est_axiome b i) && not(deduit.(i))
+         then begin
+            ax.(i) <- true;
+            for j = 0 to (n-1) do
+               if b.(i).(j) then deduit.(j) <- true done
+         end done;
+    ax;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On pourra utiliser un tableau pour éliminer, lorsqu'on a choisi un axiome, les axiomes qui lui sont équivalents.
+
+
+
+% %     ? 26 - 
+%     \item S
+    
+%     \hfill\underline{conclusion} : \fbox{Toute proposition d'une 
+%     classe d'équivalence contenant un axiome est un axiome}.
+% %     ? 27 - 
+%     \item Soit un sous-ensemble $X$ de $\mathit{\Pi}$ construit en choisissant 
+%     une et une seule proposition dans chacune des classes sources.
+    
+%     Soit $Q\in\mathit{\Pi}$. D'apr\`es la question \textbf{24.}, il existe un 
+%     axiome $P$ tel que $P\Rightarrow Q$. La proposition $P$ 
+%     appartient \`a une classe d'équivalence $C$ contenant un axiome 
+%     (puisque $P\in C$ et $P$ axiome). On a $X\cap C\neq \emptyset$, 
+%     par construction de $X$. 
+    
+%     Soit $P'\in X\cap C$.\par
+%     On a $P'\Rightarrow P$ puisque $P$ et $P'$ 
+%     sont dans la m\^eme classe d'équivalence et par transitivité, 
+%     $P'\Rightarrow Q$.
+    
+%     D'o\`u, $\big[\forall Q\in\mathit{\Pi},\ \exists P'\in X\,/\,P'\Rightarrow 
+%     Q\big] \Rightarrow$ \underline{$X$ est une axiomatique}.
+    
+%     Soit $X$ une axiomatique.
+    
+%     Soit $C$ une classe source. Soit $P\in C$. $X$ est une axiomatique 
+%     donc $\exists P' \in X\,/\,P'\Rightarrow P$. Comme $P$ est un 
+%     axiome, on a $P\Rightarrow P'$ et donc $P$ et $P'$ sont dans la 
+%     m\^eme classe d'équivalence. 
+    
+%     Donc l'axiomatique $X$ contient au moins un élément de chaque 
+%     classe source et comme les classes sources sont deux \`a deux 
+%     disjointes, \underline{le cardinal de $X$ est nécessairement supérieur ou 
+%     égal au nombre de classes sources}.
+    
+%     \underline{conclusion} : on obtient une axiomatique de cardinal minimum 
+%     en choisissant une et une seule proposition dans chacune des 
+%     classes sources.  
+% %     ? 28 - 
+%     \item Pour tous les entiers $i$ de $\intervalle{0}{n-1}$, on 
+%     ajoute \`a la liste résultat tous les axiomes non encore éliminés
+%     et pour chaque axiome 
+%     $P_{i}$ ajouté, on élimine de la recherche les $P_{k}$ qui sont 
+%     équivalents \`a $P_{i}$ (boucle des lignes 8 \`a 10).
+% \begin{lstlisting}
+% let axiomatique B = 
+%   let n = Array.length B in
+%   let res = ref [] in
+%   let NonElimine = make_vect n true in
+%   for i = 0 to n-1 do
+%       if NonElimine.(i) && est_axiome B i
+%          then (res := i::(!res);
+%               for k = i to n-1 do
+%                   if B.(i).(k) && B.(k).(i) then NonElimine.(k) <- false
+%               done;
+%               )
+%   done;
+%   rev(!res);;
+% \end{lstlisting}
+% \end{enumerate}

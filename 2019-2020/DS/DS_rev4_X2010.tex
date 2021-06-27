@@ -1,0 +1,461 @@
+\input{styleDS}
+\usepackage{enumitem}
+\def\numero{Révisions 4}
+\def\classe{Option info MP1}
+\def \A{{\cal A}}
+\def \O#1{{\cal O}\left(#1\right)}
+\renewcommand*{\arraystretch}{1.2}
+\camltrue
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Plus proche ancêtre commun, X 2017}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+{\bf N.B.} Le sujet est écrit pour {\sc Caml Light}, une variable peut commencer par une majuscule. Pour être compatible avec {\sc OCaml} on note \type{arbre} l'arbre étudié.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Une solution simple}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+
+Il s'agit de calculer la taille récursivement en complétant le tableau quand on a trouvé la taille des fils. Pour cela on va écrire une fonction récursive auxiliaire qui calcule la taille d'une liste d'arbres (une forêt).
+\begin{lstlisting}[numbers=left]
+let remplir_taille () =
+  let rec aux foret =
+    match foret with
+    |[] -> 0
+    |Noeud(i,f)::ff -> 	let tailleReste = aux ff in
+                        let tailleNoeud = 1 + aux f in
+                        taille.(i) <- tailleNoeud;
+                        tailleReste + tailleNoeud in
+  match arbre with Noeud(_,f) -> taille.(0) <- 1 + aux f;;
+\end{lstlisting}
+  
+\begin{itemize}
+  \item À la ligne 5 on calcule la taille du reste de la forêt en initialisant pas 0 (ligne 4) pour une forêt vide.
+  \item À la ligne 6 on calcule la taille de la forêt des fils du nœud et on ajoute un pour avoir la taille du nœud.
+  \item On place cette taille dans la liste à la ligne 7.
+  \item On renvoie la taille totale à la ligne 8.
+  \item Il suffit d'appeler cette fonction auxiliaire avec les fils de la racine et de remplir la taille de cette racine.
+\end{itemize}
+
+On n'effectue que 3 opérations par nœud : la complexité est un $\O n$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Les nœud du sous-arbre de racine $j$ portent des numéros successifs à partir de $j$ (c'est l'énoncé). Il y en a \type{taille.(j)} donc ces nœuds vont de $j$ à \type{j + taille.(j) - 1}.
+
+\begin{lstlisting}
+let appartient i arbre =
+  i >= arbre && i < arbre + taille.(arbre);;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+\type{PPAC(i,j)} est le plus grand entier k tel que i et j appartiennent au sous-arbre k. On doit donc avoir $k \ge i$ et $k\ge j$. On part donc du minimum de $i$ et $j$ et on décroît tant qu'on n'a pas un ancêtre commun.
+
+\begin{lstlisting}
+let ppac1 i j =
+  let rec aux k =
+    if not(appartient i k && appartient j k)
+    then aux (k-1)
+    else k in
+  aux (min i j);;
+ \end{lstlisting}
+ 
+ On fait les calculs au plus \type{min i j} fois car les nœuds ont toujours 0 pour ancêtre commun : la complexité est un $\O n$ car la fonction \type{appartient} se calcule en temps constant.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Une solution plus efficace}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Le tour eulérien d'un sous-arbre de racine $i$ qui a $p$ fils ajoute $i$ $p+1$ fois. Le tour eulérien d'un arbre de taille $n$ contient donc $n+m$ termes où $m$ est le nombre de fils. Or les fils sont les nœuds de l'arbre à l'exception de la racine  : $m=n-1$. Le tour eulérien contient $2n-1$ éléments.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+
+
+Le principe est le même qu'à la question {\bf 1} : on visite récursivement un arbre à l'aide d'une fonction auxiliaire dont les variables sont une forêt (les fils à visiter), le numéro de la racine et l'indice libre où placer dans le tour eulérien. Cette fonction renvoie la position suivante.
+
+On écrit l'indice de la racine après le traitement des fils, quand la liste des fils est vide.
+
+\begin{lstlisting}
+let remplir_taille () =
+  let rec aux foret pere position=
+    match foret with
+    |[] -> euler.(position) <- pere;
+           index.(pere) <- position;
+           position +1
+    |Noeud(i,f)::ff -> 	euler.(position) <- pere;
+                        let new_pos = aux f i (position +1) 
+                        in aux ff pere new_pos
+  in match arbre with 
+     |Noeud(_,f) -> aux f 0 0;;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+
+{\bf Notations}
+
+\begin{itemize}
+  \item On note $r_i$ la valeur de \type{index.(i)}.
+  \item On note $p_i$ le premier indice tel que \type{euler.(k) = i}, c'est le premier indice du tour eulérien où apparaît $i$.
+  
+  \item On note $d_i$ le dernier indice tel que \type{euler.(k) = i}. On a $p_i\le r_i\le d_i$.
+  
+  \item On note $\hbox{minEuler}(i,j)$ la valeur minimale de \type{euler.(k)} pour $k$ compris entre $r_i$ et $r_j$.
+  
+\end{itemize} 
+
+
+\medskip
+
+On remarque que, dans un parcours eulérien, les différentes apparitions d'un nœud $i$ sont séparées par les nœuds de ses fils donc par des entiers strictement supérieurs à $i$. 
+
+On en déduit que \type{i  <= euler.(k)} pour tout $k$ tel que $p_i\le k\le d_i$.
+
+\medskip
+
+ On veut prouver que $\hbox{minEuler}(i,j) = \hbox{PPAC}(i,j)$.
+
+\begin{itemize}
+\item Si $\hbox{PPAC}(i,j)=i$ c'est-à-dire si $j$ est un descendant de $i$ alors l'index de $j$, $r_j$, est compris entre $p_i$ et $d_i$.
+
+Ainsi $r_i$ et $r_j$ sont tous deux compris entre $p_i$ et $d_i$ donc $\hbox{minEuler}(i,j) \ge i$. 
+
+Or la valeur de \type{euler} en $r_i$ est $i$ par définition donc $\hbox{minEuler}(i,j) \le i$ 
+
+d'où l'égalité $\hbox{minEuler}(i,j) = i =\hbox{PPAC}(i,j)$.
+
+\item Symétriquement si $k=j$ on a  $\hbox{minEuler}(i,j)  =\hbox{PPAC}(i,j)$.
+
+\item Si $\hbox{PPAC}(i,j)\notin \{i,j\}$ on note $a = \hbox{PPAC}(i,j)$.
+
+Par définition $a$ est l'unique nœud admettant au moins deux fils distincts $f_1$ et $f_2$ tel que $i$ appartient à $f_1$ et $j$ appartient à $f_2$. On a a donc $p_a \le r_i\le d_a$ et $p_a \le r_j\le d_a$.
+
+Ainsi $r_i$ et $r_j$ sont tous deux compris entre $p_a$ et $d_a$ donc $\hbox{minEuler}(i,j) \le a$.
+
+De plus le parcours eulérien parcourt $f_1$ puis $f_2$ (ou $f_2$ puis $f_1$) en passant par $a$ donc \type{euler.(k)} prend au moins une fois la valeur $a$ entre $r_i$ et $r_j$ car $r_i$ est dans le parcours de $f_1$ et $r_j$ est dans le parcours de $f_2$.
+
+On peut donc conclure que  $\hbox{minEuler}(i,j) = a =\hbox{PPAC}(i,j)$.
+\end{itemize}
+
+Dans tous les cas on a bien $\hbox{minEuler}(i,j) =\hbox{PPAC}(i,j)$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+On remarque que \type{log2(n) = log2(n/2) +1}.
+\begin{lstlisting}
+let rec log2 n = 
+  match n with
+  |1 -> 0
+  |n -> log2 (n/2) + 1;;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+La clé de la complexité réduite est de remarquer que
+\[\min\bigl\{x_k\ ;\ i\le k < i + 2^{j+1}\bigr\} = \min\biggl(\min\bigl\{x_k\ ;\ i\le k < i + 2^j\bigr\},
+\min\bigl\{x_k\ ;\ i + 2^j\le k < i + 2^{j+1}\bigr\}\biggr)\]
+
+c'est-à-dire \type{M.(i).(j) <- min M.(i).(j-1) M.(i+p).(j-1)} avec $p = 2^j$ (ligne 6).
+
+Pour débuter la matrice on remarque que \type{M.(i).(0)} vaut \type{euler.(i)} (ligne 2).
+
+\begin{lstlisting}[numbers=left]
+let remplir_M () =
+  for i = 0 to m - 1 do M.(i).(0) <- euler.(i) done;
+  let p = ref 1 
+  in for j = 1 to k do 
+       for i = 0 to m - !p*2 do
+         M.(i).(j) <- min M.(i).(j-1) M.(i+!p).(j-1) done;
+       p := 2 * !p done;;
+\end{lstlisting}
+
+On maintient une variable $p = 2^k$ pour ne pas calculer inutilement.
+
+On fait une seule opération par terme de la matrice (plus une par colonne) : la complexité est donc majorée par une constante fois la taille de la matrice, c'est un $\O{n\log(n)}$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+L'idée est de recouvrir $\{i,i+1,\ldots,j\}$ par 2 intervalles de la forme $\{i,i+1,\ldots,i+2^{p}-1\}$ et $\{j-2^p+1,\ldots,j-1,j\}$ qui sont utilisés dans \type{M}.
+
+On doit donc avoir $i+2^{p}-1\le j$ et $i \le j-2^p+1$ d'où $2^p \le j -i +1$ 
+
+et $i+2^{p}-1\ge (j-2^p+1)-1$ donc $2^{p+1} \ge j-i+1$.
+
+Si on choisit $p = \hbox{log2}(j-i+1)$ on a bien $2^p \le j -i +1$ 
+
+et aussi $j-i+1< 2^{p+1}$ donc $j-i+1 \le 2^{p+1}$
+
+On calculera le minimum comme le minimum de 2 valeurs de \type{M} donc en temps constant auquel il faut ajouter le calcul de  $2^p$ qui est logarithmique en $j-i+1$ donc la complexité est un $\O{\log(n)}$. L'énoncé comportait une erreur ici.
+
+Plutôt que calculer le logarithme puis la puissance on peut modifier la fonction \type{log2}
+
+\begin{lstlisting}
+let rec puiss2 n = 
+  match n with
+  |1 -> 1
+  |n -> puiss2 (n/2) * 2;;
+
+let minimum i j =
+  let p = log2 (j - i + 1) 
+  and d = puiss2 (j - i + 1)
+  in min M.(i).(p) M.(j+1-d).(p);;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Il suffit de calculer les index et d'appeler la fonction \type{minimum} avec les indices dans le bon ordre
+\begin{lstlisting}
+let ppac2 i j =
+  let r = index.(i)
+  and s = index.(j)
+  in if r < s
+     then minimum r s
+     else minimum s r;;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\section{Opérations sur les bits des entiers}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Les opération décrites sont implémentées en Caml
+
+\begin{lstlisting}
+let et_bits x y = x land y;;
+let ou_bits x y = x lor y;;
+let ou_excl_bits x y = x lxor y;;
+let decalage_gauche x k = lshift_left x k;;
+let decalage_droite x k = lshift_right x k ;;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+L'indice du bit fort de $n$  est en fait \type{log2 n}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Il y a au plus 30 bits pour définir le nombre donc au plus 4 blocs de 8 bits.
+
+On va décomposer la fonction en 2 temps : le calcul du bit fort d'un nombre sur 16 bits puis d'un nombre jusqu'à 32 bits.
+
+Un nombre sur 16 bits s'écrit $n = n_1.2^8 + n_2$ avec $n_1$ et $n_2$ sur 8 bits.
+
+Si $n_1$ est non nul le bit fort de $n$ vaut 8 plus le bit fort de $n_1$ si non le bit fort de $n$ égale celui de $n_2$. On fait de même pour \type{bit\_fort} en décalant de 16.
+\begin{lstlisting}
+let bit_fort16 n =
+  let n1 = decalage_droite n 8
+  in if n1 > 0
+     then bits_forts.(n1) + 8
+     else bits_forts.(n);;
+     
+let bit_fort n =
+  let n1 = decalage_droite n 16
+  in if n1 > 0
+     then (bit_fort16 n1) + 16
+     else bit_fort16 n ;;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\section{Cas particulier d'un arbre binaire complet}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+{\bf N.B.} La hauteur d'un nœud est celle du sous-arbre dont le nœud est la racine.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}On commence par calculer l'entier $B(i)$ lorsque l'on connaît le chemin d'accès et la hauteur.
+
+\begin{lstlisting}
+let entierB chemin hauteur = 
+  (decalage_gauche chemin (hauteur + 1)) + 
+                        (decalage_gauche 1 hauteur);;
+\end{lstlisting}
+
+Ici on aurait pu traduire l'addition par un \type{ou\_bits}.
+
+\medskip
+
+On visite ensuite l'arbre par un parcours postfixe donc de complexité $\O n$, avec une fonction qui, après avoir rempli les tableaux, renvoie la hauteur à laquelle on est parvenu.
+
+La fonction admet comme paramètre le chemin d'accès.
+
+\begin{lstlisting}
+let remplirB () =
+  let rec visite arbre chemin =
+    match arbre with
+    |Noeud(i,[]) -> let b = entierB chemin 0 in 
+                    (B.(i) <- b; Binv.(b) <- i; 0)
+    |Noeud(i,[g; d]) -> let h = visite g (2*chemin) in
+                        let _ = visite d (2*chemin + 1) in
+                        let b = entierB chemin (h + 1 ) in
+                        (B.(i) <- b; Binv.(b) <- i; h + 1)
+    |_ -> failwith "Ceci ne devrait pas arriver"
+  in visite arbre 0;;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+$a$, le plus proche ancêtre commun de $i$ et $j$, est distinct de $i$ et $j$ donc $i$ et $j$ appartiennent à deux fils distincts de $a$. On note $h$, $h'$ et $h''$ les hauteurs respectives de $a$, $i$ et $j$.
+
+Le chemin d'accès à $i$ ou à $j$ commence par celui de $a$ : si $B(a) = x_d\cdots x_{h+1}1\underbrace{0\cdots 0}_{h}$ alors
+
+$B(i) = x_d\cdots x_{h+1}y_h\cdots y_{h'+1}1\underbrace{0\cdots 0}_{h'}$ et 
+$B(j) = x_d\cdots x_{h+1}z_h\cdots z_{h''+1}1\underbrace{0\cdots 0}_{h''}$ 
+
+avec $y_h \ne z_h$. Ainsi, pour $x = \type{ou\_excl\_bits}\bigl(B(i),B(j)\bigr) = \underbrace{0\cdots 0}_{d-h}1u_{h-1}\cdots u_0$, $\type{bit\_fort}(x) = h$, la hauteur de $a$.
+
+\medskip
+
+Pour déterminer $B(a)$ à partir de $B(i)$ et $B(j)$ on peut donc
+
+\begin{itemize}
+  \item calculer $x = \type{ou\_excl\_bits}\bigl(B(i),B(j)\bigr)$
+  \item calculer $h=\type{bit\_fort}(x)$
+  \item calculer $ch = x_d\cdots x_{h+1}=\type{decalagage\_droite}\bigl(B(i),h+1\bigr)$
+  \item calculer $B(a) = \type{decalagage\_gauche}\bigl(ch,h+1\bigr)+\type{decalagage\_gauche}(1,h)$.
+\end{itemize}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} Tout est dit dans l'énoncé et la question précédente.
+
+\begin{lstlisting}
+let ppac3 i j =
+  if appartient i j 
+  then j
+  else  if appartient j i 
+        then i
+        else let h = bit_fort (ou_excl_bits B.(i) B.(j)) in
+             let ch = decalage_droite B.(i) (h+1) in 
+             let b = decalage_gauche (2*ch + 1) h in
+             Binv.(b);;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Application}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+On note $C(p)$ le coût maximum, en nombre de comparaisons, de construction d'un arbre à partir d'un tableau de taille $p$. On a $C(1)=0$.
+
+Quand on construit un arbre on commence par calculer le minimum qui demande $n-1$ comparaisons. Ensuite on doit appliquer récursivement l'algorithme à un arbre de taille $n-1$ ou a deux arbres de tailles $k$ et $n-1-k$ avec $1\le k \le n-2$ où $k$ est la taille du premier sous-tableau. Si on pose $C(0)= 0$ on obtient
+\[C(n) = n-1 + \max\bigl\{C(k)+C(n-1-k)\ ;\ 0\le k \le n-1\bigr\}\]
+Dans le cas particulier d'un tableau trié on obtient, à chaque étape, un tableau unique de taille diminuée de 1. La complexité est alors $(n-1)+(n-2)+\cdots + 1=\frac{n(n-1)}2$.
+
+Montrons que cette valeur est le maximum.
+
+Le résultat est vrai pour $n= 1$ (et $n =0$).
+
+On suppose qu'on a $C(k) = \frac{k(k-1)}2$ pour tout $k< n$.
+
+On a alors $C(k)+C(n-1-k)=f(k)$ avec $f(x) = \frac{x(x-1)}2+\frac{(n-1-x)(n-2-x)}2$ convexe donc son maximum sur $[0;k]$ est atteint à une des bornes. Il vaut donc $f(0)=f(n-1)=\frac{(n-1)(n-2)}2$. On en déduit que
+$C(n)=n-1+\frac{(n-1)(n-2)}2=\frac{n(n-1)}2$.
+
+La propriété est vraie pour tout $n$ : la complexité est quadratique.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+
+La liste d'arbres n'est qu'un intermédiaire de calcul. On construit des arbres à partir de telles listes. 
+
+On peut construire une fonction de construction elle consiste à ajouter récursivement le premier arbre comme fils du second. Comme on aura besoin de gérer cet arbre comme fils unique d'un nœud on va en fait construire une liste comportant un ou zéro arbre 
+
+\begin{lstlisting}
+let rec listeVersFils liste =
+  match liste with
+  |[] -> liste
+  |[a] -> liste
+  |a::(Noeud(k,fils)::liste1) -> listeVersArbre (Noeud(k,a::fils)::liste1);;
+\end{lstlisting}
+
+On écrit ensuite une fonction qui ajoute un entier à une liste d'arbres. 
+
+\begin{lstlisting}[numbers=left]
+let ajouter k liste =
+  let rec aux reste vus =
+    match reste with
+    |[] -> [Noeud(k,listeVersFils vus)]
+    |Noeud(i,fils)::reste1 
+      -> if i < k
+         then Noeud(k,listeVersFils vus)::reste
+         else aux reste1 (Noeud(i,fils)::vus)
+  in aux liste [];;
+\end{lstlisting}
+
+\begin{itemize}
+  \item On utilise une fonction auxiliaire qui maintient la liste des arbres à voir et celle des arbres visités tant que l'entier n'a pas trouvé sa place (ligne 2)
+  \item S'il n'y a plus rien à voir (ligne 3) on revoie une liste avec un seul arbre dont la racine est l'entier et le fils est la conversion de la liste.
+  \item Sinon on compare $k$ avec la racine du premier arbre restant
+  \item Si $k$ est plus grand (ligne 5) alors on ajoute à la liste des arbres restant l'arbre construit comme dans le cas vide.    \item Si $k$ est plus petit (ligne 6) alors on déplace le premier arbre vers les arbres vus.
+\end{itemize}
+
+\medskip
+
+Il ne reste qu'à ajouter tous les éléments de la liste puis à récupérer l'arbre qui est le seul élément de la liste convertie. Pour cela on utilise la fonction \type{hd} qui renvoie la tête d'une liste.
+\begin{lstlisting}
+let construire_A t = 
+  let n = vect_length t in
+  let liste = ref [] in
+  for k = 0 to (n-1) do
+    liste := ajouter t.(k) !liste done;
+  hd (listeVersFils !liste);;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+On note $l_i$ la longueur de la branche droite après l'insertion du $i$-ième élément.
+
+Chaque insertion d'un élément $k$ effectue un certain nombre de comparaisons : $p_i$.
+
+On a $p_i\le l_{i-1}$ et chaque élément comparé sort de la branche droite sauf le dernier (même le dernier si l'élément ajouté est le plus petit de la branche). On ajoute ensuite $k$ à la branche. On a donc $l_i = l_{i-1} -(p_i-1)+1$ (ou $l_i = l_{i-1} -p_i+1$) d'où $p_i \le  l_{i-1}-l_i +2$ puis $\sum_{i=1}^n \le l_0-l_n+2n=2n-l_n\le 2n$. Ainsi le nombre comparaisons est un $\O n$.
+
+\medskip
+
+On peut aussi compter le nombre de construction d'arbres : pour chaque entier on peut construire un arbre avec 0 ou 1 fils puis on peut ajouter un fils. Ici encore la complexité est majorée par $2n$ : elle est linéaire.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\end{document}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+
+
+

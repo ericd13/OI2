@@ -1,0 +1,626 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Arbres rouge-noir}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\thispagestyle{empty}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Présentation du problème}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{abstract}
+On se propose ici de donner une structure d'arbre qui aura une hauteur en ${\cal O}\bigl(\log(n)\bigr)$ dans le pire des cas (plutôt qu'en moyenne). Plusieurs solutions existent qui ajoutent de la structure aux arbres binaires : les arbres AVL ajoutent la mesure du déséquilibre, les arbres 2-3 permettent des nœuds à clé double qui ont trois fils et les arbres rouges-noir, qui sont notre sujet, ajoutent une couleur aux nœuds. 
+
+Nous nous contenterons de valeurs entières pour simplifier l'étude mais la généralisation est immédiate.
+\end{abstract}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Définition}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+Nos arbres rouge-noir sont définis par les types :
+
+\begin{lstlisting}
+type couleur = Rouge|Noir;;
+type arbreRN = Vide|Noeud of couleur * arbreRN * int * arbreRN;;
+\end{lstlisting}
+
+Cette structure sera utilisée avec des conditions supplémentaires.
+%-------------------------------------------------------------------------------
+\begin{itemize}
+ \item Toutes les feuilles vides sont considérées comme noires.
+ \item La racine doit être noire.
+ \item Toutes les branches doivent comporter le même nombre de nœuds noirs.
+ \item Un nœud rouge ne peut avoir que des fils noirs (donc son père est noir).
+\end{itemize}
+%-------------------------------------------------------------------------------
+Voici un exemple d'arbre rouge-noir, les nœuds noirs sont grisés, les nœuds rouges sont blancs.
+%-------------------------------------------------------------------------------
+\[
+\begin{tikzpicture}[level distance =15mm]
+\tikzstyle{level 1}=[sibling distance =4cm]
+\tikzstyle{level 2}=[sibling distance =22mm]
+\tikzstyle{level 3}=[sibling distance =10mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+\tikzstyle{every node}=[circle,draw]
+\node[fill=gray] {$22$}
+ child {node{$13$}
+        child {node[fill=gray]{$11$}
+               child {node[fl]{}}
+               child {node[fl]{}}
+              }
+        child {node[fill=gray]{$18$}
+               child {node{$16$}
+                      child {node[fl]{}}
+                      child {node[fl]{}}
+                     }
+               child {node[fl]{}}
+              }
+       }
+ child {node[fill=gray]{$28$}
+        child {node[fl]{}}
+        child {node{$31$}
+               child {node[fl]{}}
+               child {node[fl]{}}
+              }
+       };
+\end{tikzpicture}
+\]
+
+Cet arbre est donné, ainsi qu'une adaptation du tracé des arbres, dans le fichiers \type{TP03\_debut.ml}.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Premiers pas}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Fonctions}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On commence par s'intéresser aux fonctions usuelles sans se préoccuper des conditions de couleurs : on dit que les arbres sont colorés.
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire les fonctions du cours en les adaptant au nouveau type. 
+
+On écrira les fonctions {\tt chercher x arbre}, {\tt ajoutFeuille x a}, {\tt maxArbre arbre}, 
+
+{\tt suppressionMax arbre}, {\tt suppressionRacine arbre} et {\tt suppression x arbre}.
+
+Lors de la création d'un nœud il sera rouge.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} 
+\begin{lstlisting}
+let rec chercher x arbre = 
+  match arbre with
+  |Vide -> false
+  |Noeud(k,g,n,d) when (n = x) -> true
+  |Noeud(k,g,n,d) when (x < n) -> chercher x g
+  |Noeud(k,g,n,d) -> chercher x d;;
+
+let rec ajoutFeuille x arbre = 
+  match arbre with
+  |Vide -> Noeud(Rouge,Vide,x,Vide)
+  |Noeud(k,g,n,d) when (n = x) -> arbre 
+  |Noeud(k,g,n,d) when (x < n) -> Noeud(k,(ajoutFeuille x g),n,d)
+  |Noeud(k,g,n,d) ->  Noeud(k,g,n,(ajoutFeuille x d));;
+
+let rec maxArbre arbre = 
+  match arbre with
+  |Vide -> raise(Failure "Arbre vide")
+  |Noeud(_,_,n,Vide) -> n
+  |Noeud(_,_,_,d) -> maxArbre d;;
+
+let rec suppressionMax arbre = 
+  match arbre with
+  |Vide -> raise(Failure "Arbre vide")
+  |Noeud(_,g,_,Vide) -> g
+  |Noeud(k,g,n,d) -> Noeud(k,g,n,suppressionMax d);;
+
+let suppressionRacine arbre = 
+  match arbre with
+  |Vide -> Vide
+  |Noeud(_,g,_,Vide) -> g
+  |Noeud(k,g,n,d) ->  let r = maxArbre g in
+                      Noeud(k,suppressionMax g,r,d);;
+
+let rec suppression x arbre = 
+  match arbre with
+  |Vide -> Vide
+  |Noeud(k,g,n,d) when (n = x) -> suppressionRacine arbre
+  |Noeud(k,g,n,d) when (x < n) -> Noeud(k,(suppression x g),n,d)
+  |Noeud(k,g,n,d) -> Noeud(k,g,n,(suppression x d));;
+
+ \end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Hauteur noire}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On nomme hauteur noire d’un nœud {\tt n} appartenant à un arbre bicolore, notée $h_N(n)$,  le nombre de nœuds noirs sur les chemins partant de ce nœud et
+aboutissant à une feuille (sans prendre en compte {\tt n}). Cette fonction est bien définie en raison de la  propriété d'équilibre. On nomme hauteur noire d’un arbre bicolore la hauteur noire de sa racine.
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Montrer qu’un sous-arbre de racine {\tt n} d’un arbre bicolore contient au moins $2^{h_N(n)}- 1$ nœuds internes.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} 
+
+On note ${\cal P}({\tt a})$ la propriété que l'arbre {\tt a} contient au moins  $2^{h_N(a)}- 1$ nœuds internes.
+
+Si {\tt a} est vide, sa hauteur noire est nulle (la racine n'est pas prise en compte) et il admet $0 = 2^0-1$ nœud interne. Ainsi ${\cal P}(\texttt{Vide})$ est vraie.
+
+Pour {\tt a  = Noeud(k, n, g, d)} on a $h_N({\tt g})=h_N({\tt a})$ si la couleur de {\tt g} est blanche et $h_N({\tt g})=h_N({\tt a})-1$ si la couleur de {\tt g} est noire. De même pour {\tt d}.
+
+Le nombre de nœuds internes de {\tt a}, $|{\tt a}|$, est $|{\tt a}| = |{\tt g}| + |{\tt d}| + 1$ d'où
+\[|{\tt a}| \ge 2^{h_N({\tt g})}- 1 + 2^{h_N({\tt d})}- 1 +1 \ge 2^{h_N({\tt a})-1} + 2^{h_N({\tt a})-1}- 1 = 2^{h_N({\tt a})}- 1\]
+
+La propriété est vérifiée pour tout arbre par induction structurelle.
+\end{Answer}
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it Montrer qu’un arbre bicolore comportant $l$ nœuds internes a une hauteur au plus égale à $2\log_2 ( l + 1 )$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+D'après la question précédente la hauteur noire vérifie $l \ge 2^{h_N}-1$ donc $h_N \le \log_2(l+1)$.
+
+Le long d'une branche il y a au maximum un nœud blanc entre deux nœuds noirs donc la hauteur est majorée par $2 h_N$ d'où le résultat demandé.
+\end{Answer}
+%-------------------------------------------------------------------------------
+Cela permet donc d'assurer une complexité logarithmique pour les fonctions sur les arbres si on sait les écrire en conservant les conditions.
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Équilibrage}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+La fonction de recherche ne pose pas de problème.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection{Insertion aux feuilles}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Lors de l'insertion à une feuille on a créé un nœud rouge pour ne pas modifier la hauteur noire.
+
+Cependant on peut créer un conflit si un nœud est rouge ainsi que son père.
+
+C'est le fils rouge qui vient d'être modifié donc le père du père, s'il existe, est noir.
+
+Pour résoudre le conflit on a donc 5 cas.
+
+\begin{itemize}
+\item Si le père rouge est la racine, on le change en noir.
+\item Il reste 4 cas selon que le père rouge est un fils droit ou gauche et le fils rouge est un fils droit ou gauche. 
+\end{itemize}
+
+\[
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=green] {n3}
+   child {node {n2}
+          child {node {n1}
+                 child [child anchor=north]{node[sub]{f1}}
+                 child [child anchor=north]{node[sub]{f2}}
+                }
+          child [child anchor=north]{node[sub]{f3}}
+         }
+        child [child anchor=north]{node[sub]{f4}};
+\end{tikzpicture}
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=green] {n3}
+   child {node {n1}
+          child [child anchor=north]{node[sub]{f1}}
+          child {node {n2}
+                 child [child anchor=north]{node[sub]{f2}}
+                 child [child anchor=north]{node[sub]{f3}}
+                }
+         }
+        child [child anchor=north]{node[sub]{f4}};
+\end{tikzpicture}
+\hskip 5mm
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=green] {n1}
+    child [child anchor=north]{node[sub]{f1}}
+    child {node {n3}
+          child {node {n2}
+                 child [child anchor=north]{node[sub]{f2}}
+                 child [child anchor=north]{node[sub]{f3}}
+                }
+          child [child anchor=north]{node[sub]{f4}}
+         }
+        ;
+\end{tikzpicture}
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=green] {n1}
+    child [child anchor=north]{node[sub]{f1}}
+    child {node {n2}
+          child [child anchor=north]{node[sub]{f2}}
+          child {node {n3}
+                 child [child anchor=north]{node[sub]{f3}}
+                 child [child anchor=north]{node[sub]{f4}}
+                }
+         };
+\end{tikzpicture}
+\]
+
+Ces 4 cas sont équilibrés avec le même résultat
+\[
+\begin{tikzpicture}[scale=0.9,level distance =15mm]
+\tikzstyle{level 1}=[sibling distance =4cm]
+\tikzstyle{level 2}=[sibling distance =22mm]
+\tikzstyle{level 3}=[sibling distance =10mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+\tikzstyle{every node}=[circle,draw]
+\node {$n_2$}
+ child {node[fill=green]{$n_1$}
+        child [child anchor=north]{node[sub]{f1}}
+        child [child anchor=north]{node[sub]{f2}}
+       }
+ child {node[fill=green]{$n_3$}
+        child [child anchor=north]{node[sub]{f3}}
+        child [child anchor=north]{node[sub]{f4}}
+       };
+\end{tikzpicture}
+\]
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it Modifier l'insertion en ajoutant l'appel à une fonction d'équilibrage à chaque construction de nœud et en colorant la racine en noir. On écrira, bien sur, la fonction d'équilibrage.
+
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let equR arbre = 
+  match arbre with
+  |Noeud(Noir,
+         Noeud(Rouge,Noeud(Rouge,f1,n1,f2),n2,f3),
+         n3,
+         f4) -> Noeud(Rouge,
+                      Noeud(Noir,f1,n1,f2),
+                      n2,
+                      Noeud(Noir,f3,n3,f4))
+  |Noeud(Noir,
+         Noeud(Rouge,f1,n1,Noeud(Rouge,f2,n2,f3)),
+         n3,
+         f4) -> Noeud(Rouge,
+                      Noeud(Noir,f1,n1,f2),
+                      n2,
+                      Noeud(Noir,f3,n3,f4))
+  |Noeud(Noir,
+         f1,
+         n1,
+         Noeud(Rouge,Noeud(Rouge,f2,n2,f3),n3,f4)) 
+             -> Noeud(Rouge,
+                      Noeud(Noir,f1,n1,f2),
+                      n2,
+                      Noeud(Noir,f3,n3,f4))
+  |Noeud(Noir,
+         f1,
+         n1,
+         Noeud(Rouge,f2,n2,Noeud(Rouge,f3,n3,f4))) 
+             -> Noeud(Rouge,
+                      Noeud(Noir,f1,n1,f2),
+                      n2,
+                      Noeud(Noir,f3,n3,f4))
+  |_ -> arbre;;
+
+let racineNoire arbre =
+  match arbre with
+  |Vide -> Vide
+  |Noeud(_,g,n,d) -> Noeud(Noir,g,n,d);;
+
+let ajoutFeuille x arbre = 
+  let rec aux arbre =
+    match arbre with
+    |Vide -> Noeud(Rouge,Vide,x,Vide)
+    |Noeud(k,g,n,d) when (n = x) -> arbre 
+    |Noeud(k,g,n,d) when (x < n) -> equR (Noeud(k,(aux g),n,d))
+    |Noeud(k,g,n,d) ->  equR (Noeud(k,g,n,(aux d))) in
+  racineNoire (aux arbre);;
+  \end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\subsection{Suppression de la racine}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Pour supprimer la racine on doit supprimer le maximum du fils gauche, s'il existe, et le mettre à la place de la racine.
+
+Le maximum du fils gauche est un nœud (rouge ou noir) dont le fils droit est vide donc, en raison de la hauteur noire, le fils gauche est vide ou est un nœud rouge avec deux fils vides. Il y a donc 3 cas (le quatrième, rouge/rouge, est impossible). La couleur de {\tt n1} n'est pas signifiante pour l'instant.
+
+\[
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+  \node[fill=lightgray] {n1}
+   child [child anchor=north]{node[sub]{f}}
+   child {node {n2}
+          child {node[fl]{}}
+          child {node[fl]{}}
+         }
+    ;
+\end{tikzpicture}
+\hskip 2cm
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+  \node[fill=lightgray] {n1}
+   child [child anchor=north]{node[sub]{f}}
+   child {node[fill=gray] {n2}
+          child {node[fl]{}}
+          child {node[fl]{}}
+         }
+    ;
+\end{tikzpicture}
+\hskip 2cm
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+  \node[fill=lightgray] {n1}
+   child [child anchor=north]{node[sub]{f}}
+   child {node[fill=gray] {n3}
+          child {node {n2}
+                child {node[fl]{}}
+                child {node[fl]{}}
+                }
+          child {node[fl]{}}
+         }
+    ;
+\end{tikzpicture}
+\]
+En voici des résultats possible après suppression.
+\[
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+  \node[fill=lightgray] {n1}
+   child [child anchor=north]{node[sub]{f}}
+   child {node[fl]{}}
+    ;
+\end{tikzpicture}
+\hskip 2cm
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+  \node[fill=lightgray] {n1}
+   child [child anchor=north]{node[sub]{f}}
+   child {node[fl]{}}
+    ;
+\end{tikzpicture}
+\hskip 2cm
+\begin{tikzpicture}[scale=0.9]
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =19mm]
+\tikzstyle{level 2}=[sibling distance =16mm]
+\tikzstyle{level 3}=[sibling distance =13mm]
+  \node[fill=lightgray] {n1}
+   child [child anchor=north]{node[sub]{f}}
+   child {node[fill=gray] {n2}
+          child {node[fl]{}}
+          child {node[fl]{}}
+         }
+    ;
+\end{tikzpicture}
+\]
+Dans le second cas l'arbre a perdu une unité dans la hauteur noire. Il y a un déséquilibre de hauteur noire qui apparaît : un nœud a deux fils qui sont des arbres rouge-noir mais dont les hauteurs noires diffèrent de 1. On va essayer de remonter ce déséquilibre. Si on parvient à la racine le problème disparaît. 
+Pour l'instant c'est le fils droit qui est diminué en hauteur noire car on remonte depuis le maximum.
+
+On se place donc dans le cas d'un fils gauche de hauteur noire supérieure de 1 (donc au moins 2) à celle du fils droit; ce fils n'est donc pas vide. On va alors chercher un nœud noir pour en remonter la couleur et ainsi équilibrer les hauteurs noires.
+
+
+\begin{itemize}
+\item Si la racine est rouge alors son fils gauche est noir ; on peut corriger le déséquilibre et rétablir la hauteur noire
+\[
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =32mm]
+\tikzstyle{level 2}=[sibling distance =18mm]
+\tikzstyle{level 3}=[sibling distance =12mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node {n2}
+   child {node[fill=gray]{n1}
+          child [child anchor=north]{node[sub]{f1}}
+          child [child anchor=north]{node[sub]{f2}}
+         }   
+   child [child anchor=north]{node[sub]{f3}}
+    ;
+\end{tikzpicture}
+\hskip 1cm
+\xrightarrow{\texttt{modif}}             
+\hskip 1cm
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =32mm]
+\tikzstyle{level 2}=[sibling distance =18mm]
+\tikzstyle{level 3}=[sibling distance =12mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node [fill=gray]{n1}
+   child [child anchor=north]{node[sub]{f1}}
+   child {node{n2}
+          child [child anchor=north]{node[sub]{f2}}
+          child [child anchor=north]{node[sub]{f3}}
+         }   
+    ;
+\end{tikzpicture}
+\]
+
+On remarque qu'on peut créer un conflit entre {\tt n2} et {\tt f2} si la racine de {\tt f2} est rouge : il faudra équilibrer comme dans le cas de l'ajout.
+
+\item Si la racine et le fils gauche sont noirs on peut corriger le déséquilibre mais on propage le déficit de noir.
+\[
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =32mm]
+\tikzstyle{level 2}=[sibling distance =18mm]
+\tikzstyle{level 3}=[sibling distance =12mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=gray] {n2}
+   child {node[fill=gray]{n1}
+          child [child anchor=north]{node[sub]{f1}}
+          child [child anchor=north]{node[sub]{f2}}
+         }   
+   child [child anchor=north]{node[sub]{f3}}
+    ;
+\end{tikzpicture}
+\hskip 1cm
+\xrightarrow{\texttt{modif}}             
+\hskip 1cm
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =32mm]
+\tikzstyle{level 2}=[sibling distance =18mm]
+\tikzstyle{level 3}=[sibling distance =12mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node [fill=gray]{n1}
+   child [child anchor=north]{node[sub]{f1}}
+   child {node{n2}
+          child [child anchor=north]{node[sub]{f2}}
+          child [child anchor=north]{node[sub]{f3}}
+         }   
+    ;
+\end{tikzpicture}
+\]
+Ici encore il faudra équilibrer à cause du conflit possible entre {\tt n2} et {\tt f2}.
+
+\item Si la racine est noire et le fils gauche est rouge alors ce fils gauche a des fils qui sont noirs, en particulier le fils droit. On peut corriger le déséquilibre en rétablissant la hauteur noire. 
+\[
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =28mm]
+\tikzstyle{level 2}=[sibling distance =24mm]
+\tikzstyle{level 3}=[sibling distance =12mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=gray] {n4}
+   child {node {n2}
+          child {node[fill=gray]{n1}
+                 child [child anchor=north]{node[sub]{f1}}
+                 child [child anchor=north]{node[sub]{f2}}
+                }
+          child {node[fill=gray]{n3}
+                 child [child anchor=north]{node[sub]{f3}}
+                 child [child anchor=north]{node[sub]{f4}}
+                }
+         }   
+   child [child anchor=north]{node[sub]{f5}}
+    ;
+\end{tikzpicture}
+\hskip 1cm
+\xrightarrow{\texttt{modif}}             
+\hskip 1cm
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\tikzstyle{level 1}=[sibling distance =28mm]
+\tikzstyle{level 2}=[sibling distance =15mm]
+\tikzstyle{level 3}=[sibling distance =12mm]
+\tikzstyle{level 4}=[sibling distance =10mm]
+  \node[fill=gray] {n2}
+   child {node[fill=gray] {n1}
+          child [child anchor=north]{node[sub]{f1}}
+          child [child anchor=north]{node[sub]{f2}}         }   
+   child {node[fill=gray] {n4}
+          child {node{n3}
+                 child [child anchor=north]{node[sub]{f3}}
+                 child [child anchor=north]{node[sub]{f4}}
+                }
+          child [child anchor=north]{node[sub]{f5}}
+         }   
+    ;
+\end{tikzpicture}
+\]
+Cependant le fils droit doit être équilibré (et non l'arbre entier) à cause d'un conflit possible entre {\tt n3} et {\tt f3} ou {\tt f4}. Dans le cas où les racines de {\tt f3} et {\tt f4} sont rouges on peut remarquer que la correction du conflit entre {\tt n3} et l'un des deux supprime aussi le conflit avec l'autre. On remarque aussi que l'arbre de racine {\tt n1} est inchangé.
+\end{itemize}
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it Ré-écrire la fonction {\tt suppressionMax arbre}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let equN_d arbre bon =
+  match arbre, bon with
+  |Noeud(Rouge,Noeud(_,f1,n1,f2),n2,f3), false 
+    -> equR (Noeud(Noir,f1,n1,Noeud(Rouge,f2,n2,f3))), true
+  |Noeud(Noir,Noeud(Noir,f1,n1,f2),n2,f3), false 
+    -> equR (Noeud(Noir,f1,n1,Noeud(Rouge,f2,n2,f3))), false
+  |Noeud(Noir,Noeud(Rouge,f1,n1,Noeud(_,f2,n2,f3)),n3,f4), false 
+    -> Noeud(Noir,f1,n1,equR (Noeud(Noir,f2,n2,Noeud(Rouge,f3,n3,f4)))), true
+  |_ -> arbre, true;;
+
+let rec suppressionMax arbre =
+  match arbre with
+  |Vide -> raise(Failure "Arbre vide")
+  |Noeud(Rouge,g,n,Vide) -> Vide, true
+  (* g ne peut être que Vide *)
+  |Noeud(Noir,Vide,n,Vide) -> Vide, false
+  |Noeud(Noir,Noeud(k,g1,n1,d1),n,Vide) -> Noeud(Noir,g1,n1,d1), true
+  (* Comme le fils droit est Vide, k est rouge et g1 et d1 sont vides *)
+  |Noeud(k,g,n,d) ->  let d',bon = suppressionMax d in
+                      equN_d (Noeud(k,g,n,d')) bon ;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it Ré-écrire la fonction {\tt suppression x arbre}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let equN_g arbre bon =
+  match arbre, bon with
+  |Noeud(Rouge,f1,n1,Noeud(_,f2,n2,f3)), false
+    -> equR (Noeud(Noir,Noeud(Rouge,f1,n1,f2),n2,f3)), true
+  |Noeud(Noir,f1,n1,Noeud(Noir,f2,n2,f3)), false 
+    -> equR (Noeud(Noir,Noeud(Rouge,f1,n1,f2),n2,f3)), false
+  |Noeud(Noir,f1,n1,Noeud(Rouge,Noeud(_,f2,n2,f3),n3,f4)), false
+    -> Noeud(Noir,equR (Noeud(Noir,Noeud(Rouge,f1,n1,f2),n2,f3)),n3,f4), true
+  |_ -> arbre, true;;
+
+let suppression x arbre = 
+  let rec aux arbre = 
+    match arbre with
+    |Vide -> Vide, true
+    |Noeud(k,Vide,n,d) when n = x -> d, (k = Rouge)
+    |Noeud(k,g,n,d) when n = x -> let n' = maxArbre g in
+                                  let g',bon = suppressionMax g in
+                                  equN_g (Noeud(k,g',n',d)) bon
+    |Noeud(k,g,n,d) when n < x -> let d',bon = aux d in
+                                  equN_d (Noeud(k,g,n,d')) bon
+    |Noeud(k,g,n,d) -> let g',bon = aux g in
+                       equN_g (Noeud(k,g',n,d)) bon in
+  let a, _ = aux arbre in racineNoire a;;                     
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+

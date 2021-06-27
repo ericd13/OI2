@@ -1,0 +1,321 @@
+\def\A{{\cal A}}
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+\chapter{Langages dérivés}
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+\thispagestyle{empty}
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+Dans ce sujet on considère un alphabet fini $\A$.
+%--------------------------------------------------------------------------
+\begin{defin} {\bf : langages dérivés}
+
+
+Si $L$ est un langage sur $\A$ et si $u$ est un mot ($u \in \A^{*}$) le langage dérivé (à gauche) de $L$ par $u$ est $u^{-1}.L = \{v \in \A^{*} \bigm/ u.v \in L\}$.
+On dit aussi que $u^{-1}.L$ est un {\bf résiduel} de $L$.
+\end{defin}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\section{Propriétés}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Première propriétés]
+
+Prouver les propriétés
+
+\begin{enumerate}
+\item $\varepsilon$ appartient à $u^{-1}.L$ si et seulement si $u \in L$.
+\item $\varepsilon^{-1}. L = L$.
+\item $u^{-1}.\A^* = A^*$.
+\item $v^{-1}.(u^{-1}.L) = (u.v)^{-1}.L$.
+\end{enumerate}
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{enumerate}
+\item $v$ appartient à $u^{-1}.L$ si et seulement si $u.v$ appartient à $L$ donc $\varepsilon\in u^{-1}.L$ si et seulement si $u = u.\varepsilon\in L$.
+
+\item $u \in \varepsilon^{-1}.L$ si et seulement si $u = \varepsilon.u \in L$ : $\varepsilon^{-1}.L = L$.
+
+\item $u^{-1}.\A^* \subset A^*$ ; si $v\in \A^*$ alors $u.v\in \A^*$ donc $v\in u^{-1}.\A^*$ d'où $\A^* \subset u^{-1}.\A^*$ puis $\A^* = u^{-1}.\A^*$.
+
+\item $w \in v^{-1}.(u^{-1}. L)
+\iff v.w \in u^{-1}.L
+\iff u.(v.w) \in L
+\iff (u.v).w \in L
+\iff w \in (u.v)^{-1}.L$.
+\end{enumerate}
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Un exemple]
+
+On note $L_1$ le langage sur $\A=\{a,b\}$ des mots ayant un nombre pair de $b$ et $L_2$ le langage des mots ayant un nombre impair de $b$. 
+
+Calculer les dérivés $u^{-1}.L_1$ et $u^{-1}.L_2$ pour un mot de $\A^*$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+En comptant le nombre de $b$ on montre que 
+$a^{-1}.L_1 = L_1$, $b^{-1}.L_1 = L_2$, $a^{-1}.L_2 = L_2$ et $b^{-1}.L_2 = L_1$.
+En appliquant le résultat ci-dessus on en déduit que
+
+$u^{-1}.L_1 = L_1$ et $u^{-1}.L_2 = L_2$ si $u\in L_1$ ; 
+$u^{-1}.L_1 = L_2$ et $u^{-1}.L_2 = L_1$ si $u\in L_2$.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Un autre exemple]
+
+On pose $L=\{a^nb^n\ ;\ n\in\N\}$ sur $\A=\{a,b\}$.
+
+Prouver que $(a^p)^{-1}.L= \{a^nb^{n+p}\ ;\ n\in\N\}$ pour $p\ge 1$.
+
+Prouver que $(a^p.b^q)^{-1}.L= \{b^{p-q}\}$ pour $p\ge q\ge 1$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+$ u\in (a^p)^{-1}.L \iff a^p.u \in L \iff \exists n\in N,\ a^p.u=a^n.b^n \iff u = a^{n-p}.b^n$
+
+$(a^p.b^q)^{-1}.L = (b^q)^{-1}.\left((a^p)^{-1}.L\right)$ or le seul mot de $(a^p)^{-1}.L$ qui commence par un $b$ est $b^p$. L'ensemble est non vide si et seulement si $p\ge q$ et alors son seul élément est $b^{p-q}$.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Opérations rationnelles]
+
+$L_1$ et $L_2$ sont des langages sur $\A$ et $a$ est une lettre de $\A$.
+
+\begin{enumerate}
+\item Prouver que $a^{-1}(L_1\cup L_2) = a^{-1}L_1 \cup a^{-1}L_2$.
+ 
+\item Prouver que si $\varepsilon \notin L_1$ alors $a^{-1}.(L_1.L_2)= (a^{-1}.L_1).L_2$.
+
+\item Prouver que si $\varepsilon \in L_1$ alors $a^{-1}.(L_1.L_2) = a^{-1}.L_2 \cup (a^{-1}.L_1).L_2$.
+ 		
+\item Prouver que $a^{-1}.(L_1^*) = (a^{-1}.L_1).L_1^*$.
+\end{enumerate}
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{enumerate}
+\item Si $u$ appartient à $a^{-1}(L_1\cup L_2)$ alors $a.u$ appartient à $L_1\cup L_2$ donc 
+
+soit $a.u\in L_1$ d'où $u\in a^{-1}L_1\subset a^{-1}L_1 \cup a^{-1}L_2$, 
+
+soit $a.u\in L_2$ d'où $u\in a^{-1}L_2\subset a^{-1}L_1 \cup a^{-1}L_2$.
+
+Dans les deux cas on a $u\in  a^{-1}L_1 \cup a^{-1}L_2$ d'où  $a^{-1}(L_1\cup L_2) \subset a^{-1}L_1 \cup a^{-1}L_2$.
+
+\smallskip
+
+Inversement on a $L_1 \subset L_1\cup L_2$ donc $a^{-1}L_1 \subset a^{-1}(L_1\cup L_2)$.
+
+De même $a^{-1}L_2 \subset a^{-1}(L_1\cup L_2)$ d'où $a^{-1}L_1 \cup a^{-1}L_2\subset a^{-1}(L_1\cup L_2)$.
+
+On en déduit l'égalité demandée.
+%--------------------------------------------------------------------------
+\item Soit $u$ appartenant à $(a^{-1}.L_1).L_2$.
+
+$u=u_1.u_2$ avec $u_2\in L_2$ et $u_1\in a^{-1}.L_1$ donc $a.u_1\in L_1$.
+
+On a alors $a.u=(a.u_1).u_2\in L_1.L_2$ donc $u\in a^{-1}.(L_1.L_2)$.
+
+On a prouvé $(a^{-1}.L_1).L_2\subset  a^{-1}.(L_1.L_2)$ sans condition sur $L_1$.
+
+\smallskip
+
+Inversement si $u$ appartient à $a^{-1}.(L_1.L_2)$ alors $a.u\in L_1.L_2$ 
+
+donc on peut écrire $a.u = u_1.u_2$ avec $u_1\in L_1$ et $u_2\in L_2$.
+
+Comme $u_1$ ne peut être le mot vide, il doit commencer par $a$ donc on peut écrire $u_1= a.u'_1$.
+
+On a alors $u'_1\in a^{-1}.L_1$ puis $u=u'_1.u_2\in (a^{-1}.L_1).L_2$ ce qui prouve la seconde inclusion puis l'égalité.
+%--------------------------------------------------------------------------
+\item Prouver que si $\varepsilon \in L_1$ alors $L_2\subset L_1.L_2$ donc $a^{-1}L_2 \subset a^{-1}.(L_1.L_2)$.
+
+L'inclusion $(a^{-1}.L_1).L_2\subset  a^{-1}.(L_1.L_2)$ prouvée ci-dessus donne alors 
+
+$a^{-1}.L_2 \cup (a^{-1}.L_1).L_2 \subset  a^{-1}.(L_1.L_2)$
+
+\smallskip
+
+Comme ci-dessus on écrit, pour $u\in  a^{-1}.(L_1.L_2)$ $a.u = u_1.u_2$.	
+
+Si $u_1\ne \varepsilon$ on a encore $u\in (a^{-1}.L_1).L_2$.
+
+Si $u_1= \varepsilon$ on a $a.u=u_2\in L_2$ donc $u\in a^{-1}L_2$.
+
+On a donc $u \in a^{-1}.L_2 \cup (a^{-1}.L_1).L_2$ ce qui prouve la seconde inclusion puis l'égalité.
+%--------------------------------------------------------------------------
+\item Prouver que $a^{-1}.(L_1^*) = (a^{-1}.L_1).L_1^*$.
+\end{enumerate}
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Rationalité] 
+Prouver que $u^{-1}.L$ est rationnel si $L$ est rationnel.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On procède par induction structurelle 
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\section{Automates}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+$L$ est un langage reconnaissable.
+
+$Q=(\A,S,\delta,s_0,T)$ est un automate déterministe complet reconnaissant $L$.
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Reconnaissabilité des dérivés]
+
+Prouver que $u^{-1}.L$ est le langage reconnu par $Q_u=(\A,S,\delta,s_0.u,T)$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+$ v \in u^{-1}.L \iff uv \in L \iff s_0.(uv) \in T \iff (s_0.u).v\in T$.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = {Critère de reconnaissabilité}, label = exo:fini]
+
+Prouver qu'un langage reconnaissable a un nombre fini de résiduels.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+$u^{-1}.L$ est reconnu par $(\A,S,\delta,s_0.u,T)$ : $s_0.u$ est un élément de $S$ : il n'y a qu'un nombre fini de tels automates.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Un langage non reconnaissable]
+
+Prouver que $L=\{a^nb^n\ ;\ n\in\N\}$ n'est pas reconnaissable.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Il admet une infinité de dérivés, par exemple les singletons $\{b^r\}$, donc il ne peut pas être reconnaissable.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\bigskip
+
+Si un langage $L$ sur l'alphabet $\A$ admet un nombre fini de langages dérivés on définit un automate, l'{\bf automate dérivé}, $Q_L=(\A,\Lambda,\delta_L,L,\Lambda_T)$ avec
+
+\begin{itemize}
+\item $\Lambda$ est l'ensemble des résiduels de $L$, il contient $L=\varepsilon^{-1}.L$,
+\item $\Lambda_T$ est l'ensemble des résiduels contenant $\varepsilon$,
+\item $\delta_L(\lambda,x)=x^{-1}.\lambda$ pour $x\in \A$ et pour tout résiduel $\lambda$.
+\end{itemize}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Langage reconnu]
+
+Prouver que $Q_L$ reconnaît $L$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Par récurrence sur $|u|$ on montre que $\lambda.u=u^{-1}.\lambda$ pour tout $\lambda$. 
+
+En particulier $L.u=u^{-1}.L$ donc les mots reconnus sont les mots tels que $u^{-1}. L \in \Lambda_0$ c'est-à-dire les mots $u$  tels que $\varepsilon\in u^{-1}\cdot L$. On a vu que cela caractérisait les mots de $L$ donc $L$ est le langage reconnu par $Q$.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\medskip
+On a donc la démonstration de la réciproque du
+\begin{thm}[Un critère de reconnaissabilité]
+Un langage est reconnaissable si et seulement si il admet un nombre fini de résiduels.
+\end{thm}
+Le sens direct a été prouvé dans l'exercice \ref{exo:fini}.
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Minimalité]
+Prouver que l'automate dérivé est de cardinal minimal parmi les automates déterministes complets reconnaissant $L$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Soit $Q=(\A,S,\delta,s_0,T)$ un automate qui reconnaît $L$.
+
+L'émondage donne un automate $Q=(\A,S',\delta',s_0,T')$ qui reconnaît $L$ aussi avec $|S'| \le |S|$.
+
+Pour tout $s\in S'$ on note $L(s)$ le langage reconnu par $(\A,S',\delta',s,T')$
+
+Il existe $u \in  \A^*$ tel que $s=s_0.u$ ; on a vu qu'alors le langage reconnu on a $L(s) = u^{-1}.L$.
+
+Ainsi l'application qui à $s \mapsto L(s)$ est à valeur dans $\Lambda$. 
+
+Cette application est surjective car $u^{-1}.L = L(s_0.u)$.
+
+Ainsi $|\Lambda| \le |S'| \le |S|$.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\medskip
+
+%--------------------------------------------------------------------------
+\begin{defin}[automates équivalents]
+
+Deux automates sur un même langage $\A$, $Q=(\A,S,\delta,s_0,T)$ et $Q'=(\A,S',\delta',s'_0,T')$, sont équivalents 
+
+s'il existe une bijection $p$ de $S$ vers $S'$ telle que
+\begin{enumerate}
+\item $p(s_0)=s'_0$,
+\item $p(T)=T'$ et
+\item $\delta'\bigl(p(s),x\bigr)=p\bigl(\delta(s,x)\bigr)$ pour tout $s\in S$ et pour tout $x\in \A$.
+\end{enumerate}
+$p$ est un {\bf isomorphisme} de $Q$ vers $Q'$.
+\end{defin}
+%--------------------------------------------------------------------------
+
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title = Unicité]
+
+Prouver que si un automate $Q=(\A,S,\delta,s_0,T)$ reconnaît $L$ et vérifie $|S|=|\Lambda|$ 
+
+alors $Q$ est équivalent à l'automate dérivé.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On va prouver que $\pi$ : $s \mapsto L(s)$ est un isomorphisme d'automates.
+%--------------------------------------------------------------------------
+\begin{enumerate}
+\item On a vu que $\pi$ est surjective de $\Lambda$ vers $S$. 
+
+Comme ces deux ensembles sont finis de même cardinal, $\pi$ est une bijection.
+
+Si $\lambda = u^{-1}.L$ on a $\lambda = \pi(s_0.u)$ donc $\pi^{-1}(\lambda)=s_0.u$ : le résultat est indépendant de $u$.
+
+On a prouvé, dans ce cas, la réciproque de l'exercice précédent 
+
+$u^{-1}.L = v^{-1}.L$ implique $s_0.u=s_0.v$.
+%--------------------------------------------------------------------------
+\item Si $s$ est terminal alors $s=s_0.u$ avec $u\in L$. 
+
+On a donc $\pi(s)=u^{-1}.L$ qui contient $\varepsilon$ : $\pi(s)$ appartient à $\Lambda_T$.
+
+Inversement si $\pi(s)$ est terminal dans $Q_L$ alors il contient $\varepsilon$ ; pour $s=s_0.u$ cela signifie qu'on a $\varepsilon \in u^{-1}.L$ donc $u\in L$ et $s\in T$.
+
+On a bien $\pi(T)=\Lambda_T$.
+%--------------------------------------------------------------------------
+\item Soit $s = s_0.u\in S$, $\pi(s)=u^{-1}.L$.
+
+$\delta_L\bigl(\pi(s), x\bigr)=x^{-1}.\pi(s)=x^{-1}.\bigl(u^{-1}.L\bigr) = (u.x)^{-1}.L$
+
+$\delta(s,x)= s.x=(s_0.u).x=s_0.(u.x)$ donc $\pi\bigl(\delta(s,x)\bigr) =\pi\bigl(s_0.(u.x)\bigr)
+=(u.x)^{-1}.L$.
+
+On a bien $\delta_L\bigl(\pi(s), x\bigr)=\pi\bigl(\delta(s,x)\bigr)$.
+\end{enumerate}
+Les automates sont bien équivalents.
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+
+

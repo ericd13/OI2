@@ -1,0 +1,846 @@
+\input{styleDS}
+\usepackage{enumitem}
+\def\numero{02}
+\def\classe{Option info MP1}
+\def\max{\text{\rm max}}
+\def\val{\text{\rm val}}
+\def\diff{\text{\rm diff}}
+
+\camltrue
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Problème SAT, mines 2010}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+{\bf Recommandations aux candidats}
+\begin{itemize}
+\item Si, au cours de l’épreuve, un candidat repère ce qui lui semble être une erreur d’énoncé, il le signale sur sa copie et poursuit sa composition en expliquant les raisons des initiatives qu’il est amené à prendre.
+%-------------------------------------------------------------------------------
+\item Tout résultat fourni dans l’énoncé peut être utilisé pour les questions ultérieures même s’il n’a pas été démontré.
+%-------------------------------------------------------------------------------
+\item Il ne faut pas hésiter à formuler les commentaires qui semblent pertinents même
+lorsque l’énoncé ne le demande pas explicitement.
+%-------------------------------------------------------------------------------
+\item Pour écrire une fonction, le candidat pourra définir des fonctions auxiliaires qu’il explicitera ou faire appel à d’autres fonctions ou procédures définies dans les questions précédentes.
+\end{itemize}
+%-------------------------------------------------------------------------------
+
+\medskip
+
+{\bf Notations}
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+%-------------------------------------------------------------------------------
+\item Dans l’énoncé du problème, un même identificateur écrit dans deux polices de caractères différentes désigne la même entité, mais du point de vue mathématique pour la police écrite en italique ($F$) et du point de vue informatique pour celle écrite en romain (\type{F}).
+%-------------------------------------------------------------------------------
+\item On appelle variable booléenne une variable qui ne peut prendre que les valeurs {\it faux} (\type{false}) ou {\it vrai} (\type{true}). Si $x$ est une variable booléenne, on appelle complémenté de $x$,  noté $\overline x$, la négation de $x$ : $\neg x$.
+%-------------------------------------------------------------------------------
+\item On appelle littéral une variable booléenne ou son complémenté. Pour $p = \overline x$, on définit le complémenté $\overline p$ de $p$ comme étant égal à $x$.
+%-------------------------------------------------------------------------------
+\item On représente la disjonction ("ou" logique ) par $\land$ et la conjonction ("et" logique) par $\lor$.
+%-------------------------------------------------------------------------------
+\item On appelle clause une disjonction de littéraux et longueur d’une clause le nombre des littéraux qui composent cette clause. Cette longueur doit être au moins égale à 1.
+%-------------------------------------------------------------------------------
+\item On appelle formule logique sous forme normale conjonctive une conjonction de clauses ; chacune de ces clauses est dite appartenir à la formule logique. 
+
+{\bf Dans tout le problème, quand on utilisera l’expression formule logique, il s’agira d’une formule logique sous forme normale conjonctive}. 
+
+On ne suppose pas que toutes les clauses d’une formule logique sont distinctes.
+%-------------------------------------------------------------------------------
+\item Dans tout le problème, les littéraux d’une même clause sont différents et une clause ne contient pas à la fois une variable et le complémenté de celle-ci : si une clause contient le littéral $p$, elle ne contient pas une deuxième fois $p$ et elle ne contient pas $\overline p$. Dans les algorithmes qui seront à écrire, on fera en sorte que cette propriété soit toujours vérifiée. En conséquence, la longueur d’une clause d’une formule logique n’est jamais supérieure au nombre total de variables de la formule logique considérée.
+%-------------------------------------------------------------------------------
+\item On appelle {\bf valuation} des variables d’une formule logique une application de l’ensemble de ces variables dans l’ensemble $\{ vrai, faux\}$. On prolonge les valuations  sur les clauses : une clause vaut {\it vrai} si au moins un de ses littéraux vaut {\it vrai} et {\it faux} sinon. 
+
+Une clause est dite satisfaite par une valuation des variables si elle vaut {\it vrai} pour cette valuation. Une formule logique vaut {\it vrai} si toutes ses clauses valent {\it vrai} et {\it faux} sinon. 
+%-------------------------------------------------------------------------------
+\item Une formule logique est dite satisfaite par une valuation des variables si elle vaut {\it vrai} pour cette valuation. Une formule logique est dite {\bf satisfiable} s’il existe une valuation de ses variables qui la satisfait. Si une formule logique est satisfiable, on appelle alors solution de cette formule logique toute valuation des variables qui la satisfait.
+
+Par exemple, la formule logique : $(x \lor y \lor z) \land (\overline x \lor z) \land (\overline y \lor \overline z)$ est satisfiable et elle est satisfaite par la solution $x \mapsto vrai$, $y \mapsto faux$ et $z\mapsto vrai$.
+%-------------------------------------------------------------------------------
+\item Une formule logique qui n’aurait aucune clause est dite vide et considérée comme satisfaite.
+%-------------------------------------------------------------------------------
+\item Étant donnée une formule logique $F$, on note dans ce problème $\max(F)$ le nombre maximum de clauses de $F$ pouvant être satisfaites par une même valuation ; en notant $m$ le nombre de clauses de $F$, on remarque que $F$ est satisfiable si et seulement si $\max(F) = m$.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Pour les deux premières questions de ce problème, on considère trois personnes nommées $X$, $Y$ et $Z$ et on s’intéresse au fait qu’elles portent ou non un chapeau. On définit des variables booléennes $x$, $y$ et $z$ qui valent {\it vrai} si, respectivement, $X$, $Y$ et $Z$ portent un chapeau et {\it faux} sinon.
+
+On considère les propositions suivantes :
+\begin{enumerate}[label=\alph*)]
+  \item au moins une des personnes porte un chapeau ;
+  \item au moins une des personnes ne porte pas de chapeau ;
+  \item si $X$ porte un chapeau, ni $Y$ ni $Z$ n’en portent ;
+  \item si $Y$ porte un chapeau, au moins une personne parmi $X$ ou $Z$ en porte un.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Exprimer chacune des propositions a), b), c) et d) comme une formule logique  (sous forme normale conjonctive) exprimée avec les variables $x$, $y$ et $z$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{enumerate}[label=\alph*)]
+  \item $x \lor y \lor z $
+  \item $\overline x \lor \overline y \lor \overline z$
+  \item $x \Rightarrow (\overline y \land \overline z)$ équivalent à $\overline x \lor (\overline y \land \overline z)$
+  donc à $(\overline x \lor \overline y) \land (\overline x \lor \overline z)$.
+  \item $y \Rightarrow (x \lor z)$ équivalent à $\overline y \lor x \lor z$.
+\end{enumerate}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une formule logique exprimant le fait que les propositions a), b), c) et d) doivent être satisfaites simultanément. Indiquer si cette formule logique est satisfiable ou non et, si elle est satisfiable, donner l’ensemble des solutions pour cette formule logique. On prouvera la réponse.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+On cherche les solutions de $F=(x \lor y \lor z)\land(\overline x \lor \overline y \lor \overline z)\land(\overline x \lor \overline y) \land (\overline x \lor \overline z)\land(\overline y \lor x \lor z)$.
+
+La table de vérité est
+\[
+\begin{tabular}{|ccc|ccccc|c|}
+\hline
+$x$&$y$&$z$&$x \lor y \lor z$&$\overline x \lor \overline y \lor \overline z$&$\overline x \lor \overline y$&$\overline x \lor \overline z$&$\overline y \lor x \lor z$&$F$\\
+\hline
+0&0&0&0&1&1&1&1&0\\
+0&0&1&1&1&1&1&1&1\\
+0&1&0&1&1&1&1&0&0\\
+0&1&1&1&1&1&1&1&1\\
+1&0&0&1&1&1&1&1&1\\
+1&0&1&1&1&1&0&1&0\\
+1&1&0&1&1&0&1&1&0\\
+1&1&1&1&0&0&0&1&0\\
+\hline
+\end{tabular}\]
+
+$F$ est satisfiable pour les valuation $(0,0,1)$, $(0,1,1)$ et $(1,0,0)$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+
+On considère maintenant la formule logique $F_1$ à quatre variables $x$, $y$, $z$ et $t$ :
+
+$F_1 = (x \lor y \lor z) \land (\overline x \lor z \lor \overline t) \land (x \lor \overline y \lor \overline z ) \land (x \lor y \lor \overline t) \land (\overline x \lor \overline z \lor \overline t) \land (\overline x \lor t) \land (x \lor \overline y \lor z)$
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Indiquer si $F_1$ est satisfiable ou non et, si elle est satisfiable, donner l’ensemble des solutions de $F_1$. On prouvera la réponse.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On note $c_1 = x \lor y \lor z$, $c_2 = \overline x \lor z \lor \overline t$, $c_3 = x \lor \overline y \lor \overline z$, $c_4 = x \lor y \lor \overline t$, $c_5 = \overline x \lor \overline z \lor \overline t$, $c_6 = \overline x \lor t$ et $c_7 = x \lor \overline y \lor z$.
+
+On a $c_2 \land c_5 \equiv \overline x \lor (z \land \overline z) \lor \overline t \equiv \overline x \lor \overline t$
+d'où $c_2 \land c_5 \land c_6 \equiv \overline x \lor (\overline t \land t) \equiv \overline x$.
+
+De même $c_3 \land c_7 \equiv x \lor \overline y \lor(\overline z \land z) \equiv x \lor \overline y$ donc
+
+$c_2 \land c_5 \land c_6 \land c_3 \land c_7 \equiv \overline x \land(x \lor \overline y) 
+\equiv \overline x \land x \lor \overline  x \land \overline y \equiv \overline x \land \overline y$.
+
+On a alors $\overline x \land \overline y \land c_1 \equiv \overline x \land \overline y \land x \lor
+\overline x \land \overline y \land y \lor\overline x \land \overline y \land z
+\equiv \overline x \land \overline y \land z$.
+
+De même $\overline x \land \overline y \land c_4 \equiv \overline x \land \overline y \land \overline t$ donc $F1 \equiv
+\overline x \land \overline y \land z \land \overline t$.
+
+$F_1$ est satisfiable pour la seule valuation $(0,0,1,0)$.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+
+On considère une formule logique $F$ définie sur $n$ variables booléennes et dont toutes les clauses sont de longueur 3 ; on dit alors qu’il s’agit d’une instance de {\bf 3-SAT} ; on note $m$ le nombre de clauses dont $F$ est la conjonction.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Déterminer une instance $F_2$ de {\bf 3-SAT} non satisfiable et possédant exactement 8 clauses ; indiquer $\max(F_2)$ en justifiant la réponse.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+Si on développe $(x\land \overline x) \lor (y\land \overline y) \lor (z\land \overline z)$, qui n'est pas satisfiable, on obtient une conjonction de 8 clauses de longueur 3 : on a donc une instance de 3-sat, $F2$, à 8 clauses et non satisfiable.
+
+Si on retire la clause $x \lor y \lor z$ on obtient une formule logique satisfiable pour la valuation $(0,0,0)$ donc $m(F2)=7$.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On considère une instance $F$ de {\bf 3-SAT} définie sur $n$ variables booléennes. 
+
+On $\Gamma$ l'ensemble des clauses de $F$ et $V$ l’ensemble des $2^n$ valuations des variables de $F$. 
+
+Si $C\in\Gamma$ est une clause, on note $\varphi ( C , \val )=1$ ou $\varphi ( C , \val )=0$ selon que la valeur de $C$ pour la valuation \val\ est {\it vrai} ou {\it faux}. 
+
+On note $\psi ( F , \val)$ le nombre de clauses de $F$ qui valent {\it vrai} pour la valuation \val. 
+
+On a $\displaystyle \psi ( F , \val ) = \sum_{C\in\Gamma}\varphi ( C , \val )$ et $\max(F) = \max \bigl\{\psi ( F , \val ),\ \val \in V\bigr\}$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+On considère une clause $C$ de $F$ ; indiquer en fonction de $n$ la valeur de la
+somme : $\displaystyle \sum_{\val\in V}\varphi ( C , \val )$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+Une clause de 3 variables est satisfaite pour 7 valuations sur les 8 qui concernent les 3 variables de la clauses. Comme les valeurs des $n-3$ autres variables sont indifférentes on en déduit que la clause est satisfaite pour $7.2^{n-3}$ valuations donc
+$\displaystyle \sum_{\text{val} \in V} \varphi(C,\text{val})=7.2^{n-3}$. 
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+En considérant la somme $\displaystyle \sum_{C\in\Gamma}\sum_{\val\in V}\varphi ( C , \val )$, indiquer en fonction de $m$ un minorant de $\max(F)$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+Comme $m$ est le nombre de clauses on a $\displaystyle \sum_{C\in\Gamma}\,\sum_{\text{val} \in V} \varphi(C,\text{val})=m.7.2^{n-3}$.
+
+On a donc $\displaystyle m.7.2^{n-3} = \sum_{\text{val} \in V}\, \sum_{C\in\Gamma} \varphi(C,\text{val})
+=\sum_{\text{val} \in V} \psi(F,\text{val}) \le \sum_{\text{val} \in V} \text{max}(F) = 2^n \text{max}(F)$.
+
+On en déduit qu'on a $\displaystyle \text{max}(F) \ge m\frac 78$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Donner le nombre minimum de clauses d’une instance de {\bf 3-SAT} non satisfiable.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+Pour que $F$ soit non satisfiable on doit avoir $\text{max}(F) < m$ donc $\text{max}(F) \le m - 1$.
+
+D'après le résultat ci-dessus on doit donc avoir $\displaystyle m\frac 78 \le m -1$ d'où  $m\ge 8$.
+
+Les instances de {\bf 3-SAT} non satisfiables ont au moins 8 clauses.
+\end{Answer}
+%------------------------------------------------------------
+%------------------------------------------------------------
+\section*{Indications pour la programmation}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+  \item On va désormais numéroter à partir de 1 les variables booléennes d’une formule logique.
+Ainsi, si les variables sont $x$, $y$ et $z$, on associe à $x$ le numéro 1, à $y$ le numéro 2 et à $z$ le
+numéro 3. Par ailleurs, on numérote le complémenté d’une variable avec l’opposé du numéro
+associé à celle-ci ; ainsi, avec l’exemple ci-dessus, au littéral $\overline x$, on associe le numéro $-1$, au
+littéral $\overline y$, on associe le numéro $-2$, au littéral $\overline z$, on associe le numéro $-3$. 
+
+{\bf Pour alléger les explications, on identifie désormais un littéral avec son numéro.}
+%-------------------------------------------------------------------------------
+\item Pour coder une valuation d’un ensemble de $n$ variables booléennes, on utilise un tableau de booléens de longueur au moins $n + 1$. Pour $i$ compris entre 1 et $n$, la case d’indice $i$ donne la
+valeur de la variable de numéro $i$ (\type{true} ou \type{false}). 
+
+Les cases d’indice 0 ou $k> n$ ne sont pas utilisées.
+%-------------------------------------------------------------------------------
+\item Pour coder une clause de longueur $p$, on utilise un tableau d’au moins $p + 1$ entiers.
+
+Pour $i$ compris entre 1 et $p$, la case d’indice $i$ contient le numéro du littéral qui se
+trouve en position $i$ dans la clause. La case d’indice 0 de ce tableau indique la longueur de la
+clause. 
+
+Ainsi, si les variables sont $x$, $y$, $z$ et $t$, numérotées respectivement par 1, 2, 3 et 4, la
+clause $(x \lor \overline t \lor y)$ peut être codée par 
+\type{[|3; 1; -4; 2|]} ou \type{[|3; 1; -4; 2; 5|]} ou \dots
+%-------------------------------------------------------------------------------
+\item Pour coder une formule logique, on utilise un tableau de tableaux d’entiers.
+
+Pour $i$ supérieur ou égal à 1, la ligne d’indice $i$ décrit la $i$-ième clause de la formule logique. 
+
+On utilise deux cases de la ligne d’indice 0 : la case d’indices $(0, 0)$ contient le nombre de clauses de la formule logique et la case d’indice $(0, 1)$ contient le nombre total de variables. 
+
+Ainsi, la formule logique $F_3 = (x \lor \overline y \lor z \lor t) \land (\overline x \lor \overline z) 
+\land (x \lor \overline t \lor y)$ est peut être codée par 
+\begin{lstlisting}
+let F3 = [|[|3; 4|]; [|4; 1; -2; 3; 4|]; 
+           [|2; -1; -3|]; [|3; 1; -4; 2|]|];;
+\end{lstlisting}
+On a écrit des tableaux minimaux pour les clauses.
+%------------------------------------------------------------
+\item Soit \type{F} un tableau de tableaux définissant une formule logique $F$ et soient $i$ et $j$ deux entiers
+compris entre 1 et \type{F.(0).(0)} ; le tableau \type{F.(i)} définit la $i$-ième clause de $F$.
+
+Dans un calcul de complexité, on considérera l’instruction \type{F.(i) <- F.(j)} comme une seule opération
+élémentaire.
+\end{enumerate}
+%------------------------------------------------------------
+\newpage
+%------------------------------------------------------------
+\section{Satisfiabilité, méthode exacte}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{valeur\_clause : int array -> bool array -> bool}
+
+telle que, si \type{C} est un tableau codant codant une clause $C$ et si \type{val} est un tableau codant une valuation \val d’un ensemble de variables contenant les variables de $C$, alors \type{valeur\_clause C val} donne la valeur (booléenne) de $C$ pour la valuation \val.
+
+Indiquer la complexité de la fonction \type{valeur\_clause}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}On commence par la valeur d'un littéral.
+\begin{lstlisting}
+let valeur_litteral litt valeur =
+  if litt > 0 then valeur.(x) else not valeur.(x);;
+\end{lstlisting}
+Il reste alors à faire la disjonction des valeurs des littéraux
+\begin{lstlisting}
+let valeur_clause clause valeur =
+  let s = ref false in
+  for i = 1 to clause.(0) do
+    s := !s || (valeur_litteral clause.(i) valeur) done;
+  !s;;
+\end{lstlisting}
+La complexité est proportionnelle à la longueur de la clause.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{satisfait\_formule : int array array -> bool array -> bool}
+
+telle que, si \type{F} code une formule $F$ et si \type{val} code une valuation \val,  alors \type{satisfait\_formule F val} donne la valeur (booléenne) de $F$ pour la valuation \val.
+
+Indiquer la complexité de la fonction \type{satisfait\_formule}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}On fait la disjonction des valeurs des clauses. 
+
+On renvoie le booléen d'égalité du produit à 1.
+\begin{lstlisting}
+let satisfait_formule formule valeur =
+  let prod = ref true in
+  for i = 1 to formule.(0).(0) do
+    prod := !prod && (valeur_clause formule.(i) valeur) done;
+  !prod;;
+\end{lstlisting}
+La complexité est proportionnelle au nombre total de littéraux dans l'écriture de la formule.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+
+On considère une formule logique $F$ et un nombre $k$ compris entre 0 et le nombre total de variables de $F$. Pour $i$ compris entre 1 et $k$, on fixe un booléen $v_i$ pour la variable $i$ (si $k$ vaut 0, aucune variable n’a une valeur fixée). 
+
+On cherche à déterminer s’il existe une valuation \val des variables telle que
+\begin{enumerate}
+  \item pour $i$ compris entre 1 et $k$, la valeur dans \val de la variable $i$ est $v_i$,
+  \item \val\ satisfait $F$. 
+\end{enumerate}
+
+On dit, dans ce cas que la formule vérifie la propriété ${\cal P}(k)$ pour la valuation \val.
+
+On dispose d’un tableau de booléens destiné à coder une valuation des variables ; dans le cas où la valuation cherchée existe, on modifie les cases de ce tableau à partir de l'indice $k+1$ pour qu’il code une telle valuation et on renvoie alors la valeur {\it vrai} ; si la valuation cherchée n’existe pas, on renvoie la valeur {\it faux}.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction récursive 
+\begin{lstlisting}
+resoudre_rec : int array array -> bool array -> int -> bool
+\end{lstlisting}
+telle que, si \type{F} code une formule, \type{val} code une valuation et $k$ est un entier compris entre 0 et le nombre de variables de $F$, $n$, alors \type{resoudre\_rec F val k} renvoie \type{true} ou \type{false} selon que la formule vérifie ou non la propriété ${\cal P}(k)$ pour la valuation \val en modifiant si besoin les cases d'indice $k+1$ à $n$ de \type{val} pour obtenir une valuation satisfiant $F$ si la réponse est \type{true}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}Le cas d'arrêt est celui où $k=n$, le nombre de variables.
+\begin{lstlisting}
+let rec resoudre_rec formule valeur k =
+  let n = formule.(0).(1) in
+  if k = n
+  then satisfait_formule formule valeur
+  else   (valeur.(k+1) <- false; 
+          resoudre_rec formule valeur (k+1))
+       ||(valeur.(k+1) <- true; 
+          resoudre_rec formule valeur (k+1));;
+\end{lstlisting}
+
+Comme l'évaluation du \type{||} n'effectue pas la seconde évaluation si la première évaluation renvoie vraie , la valuation transformée correspond bien à une éventuelle solution.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{resoudre :  int array array -> bool array} telle que, si \type{F} code une formule logique $F$, alors \type{resoudre F} renvoie un tableau de booléen.
+
+Si $F$ est satisfiable, la réponse doit coder une valuation satisfiant $F$ et son premier terme doit contenir la valeur \type{true}, si $F$ n'est pas satisfiable, le premier terme de la réponse doit contenir la valeur \type{false} (les autres valeurs ne sont pas signifiantes).
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}On appelle bien entendu la fonction précédente après avoir construit une valuation.
+\begin{lstlisting}
+let resoudre formule =
+  let n = formule.(0).(1) in
+  let valeur = Array.make (n+1) false in
+  if resoudre_rec formule valeur 0 then valeur.(0) <- true;
+  valeur;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Évaluer la complexité de la fonction \type{resoudre} appliquée à une formule logique $F$ en fonction du nombre $n$ de variables de $F$ et de la somme des longueurs des clauses de $F$, $l$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Dans le cas d'une formule non satisfiable on essaie toutes les valuations donc la complexité est un ${\cal O}(l2^n)$.
+\newpage
+\end{Answer}
+%------------------------------------------------------------
+%------------------------------------------------------------
+\section{MAX-SAT}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Dans cette partie, on ne s’intéresse plus à savoir si une formule logique est satisfiable mais au calcul, pour une formule logique $F$, de $\max(F)$. On va définir une heuristique, c’est-à-dire une méthode qui ne donne pas nécessairement la valeur de $\max(F)$ mais une valeur approchée, qu’on souhaite proche de l’optimum : on calcule une valuation en choisissant une à une les variables et leurs valeurs. 
+
+Plus précisément, soit $F$ une formule logique ; étant donnée une variable $\alpha$ de F, on note $\diff(F, \alpha )$ le nombre de fois où $\alpha$ figure dans $F$ diminué du nombre de fois où $\overline \alpha$ figure dans $F$.
+
+\medskip
+
+L’heuristique utilise la transformation suivante :
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+  \item on calcule pour chaque variable $\alpha$ de $F$ le nombre $\diff(F, \alpha )$,
+%-------------------------------------------------------------------------------
+  \item on détermine une variable $\alpha_0$ de $F$ telle que, pour toute variable $\alpha$ de $F$, on ait :
+  
+$\bigl|\diff(F, \alpha_0 )\bigr| \ge \bigl|\diff(F, \alpha)\bigr|$,
+%-------------------------------------------------------------------------------
+  \item on donne la valeur {\it vrai} à $\alpha_0$ si on a $\diff(F, \alpha_0 ) > 0$ et la valeur {\it faux} sinon,
+%-------------------------------------------------------------------------------
+\item on supprime la variable $\alpha_0$ de $F$ en tenant compte de la valeur choisie de façon à ne conserver que les clauses qui restent à satisfaire après le choix de la valeur de $\alpha_0$ ; on comptabilise le nombre de clauses satisfaites. 
+  
+  On obtient ainsi une formule logique notée $F'$ : la formule transformée à partir de $F$.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+Pour exécuter l’heuristique, on transforme la formule $F$ comme décrit ci-dessus, puis on transforme de même la formule $F'$, puis on transforme la formule transformée à partir de $F'$ et ainsi de suite jusqu’à obtenir une formule vide. On somme au fur et à mesure les nombres de clauses satisfaites comptabilisés pendant chaque transformation ; le résultat de l’heuristique est constitué de cette somme et d’une valuation correspondant aux choix effectués pendant les transformations successives pour les valeurs des variables.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Appliquer l’heuristique à la formule $F_1$ définie avant la question 3 ;
+détailler les différentes étapes.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+On notera que la formule transformée n'est pas équivalente à la formule initiale.
+\begin{itemize}
+  \item On calcule $\diff(F_1,x) = 1$, $\diff(F_1,y) = 0$, $\diff(F_1,z) = 1$, $\diff(F_1,t) = -2$.
+
+On choisit $t = 0$ et on a satisfait 3 clauses. On aboutit à la formule 
+
+$F_1'=(x \lor y \lor z)\land (x \lor \overline y \lor \overline z)\land  \overline x\land (x \lor \overline y \lor z)$.
+
+\item On calcule $\diff(F_1',x) = 2$, $\diff(F_1',y) = -1$, $\diff(F_1',z) = 1$.
+
+On choisit $x=1$ et on a satisfait 3 clauses. On aboutit à la formule vide.
+
+\item On a ainsi satisfait 6 clauses avec les valuations $(1,y,z,0)$.
+\end{itemize}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{place : int array -> int -> int} telle que, si \type{C} est un tableau codant une
+clause $C$ et si \type{litt} est un littéral, \type{place C litt} renvoie 0 si \type{litt} ne figure pas dans $C$ ou la position de \type{litt} dans $C$ si \type{litt} figure dans $C$.
+
+Évaluer la complexité de la fonction \type{place}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}On parcourt simplement le tableau des littéraux.
+
+\begin{lstlisting}
+let place c litt =
+  let n = c.(0) in
+  let p = ref 0 in
+  for i = 1 to n do
+    if c.(i) = litt
+    then p := i done;
+  !p;;
+\end{lstlisting}
+La complexité est proportionnelle à $l$, le nombre de littéraux de $c$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{supprimer\_variable : int array -> int -> unit} telle que, si \type{C} est un tableau codant une clause $C$ et si \type{i} est un entier compris entre 1 et le nombre de littéraux de $C$, alors \type{supprimer\_variable C i} modifie \type{C} pour que \type{C} code la clause obtenue en supprimant de la clause $C$ le littéral d’indice $i$. La complexité de cette fonction doit être de l’ordre d’une constante, et donc ne pas dépendre du nombre de littéraux de la clause $C$ ni de la valeur de $i$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}Pour que la complexité soit constante il suffit de diminuer le nombre de littéraux et de placer le dernier à la place de celui que l'on retire.
+\begin{lstlisting}
+let supprimer_variable clause i =
+  let n = clause.(0) in
+  clause.(i) <- clause.(n);
+  clause.(0) <- (n-1);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{supprimer\_clause : int array array -> int -> unit} telle que, si \type{F} est un tableau de tableaux codant une formule logique $F$ et si \type{i} est un entier compris entre 1 et le nombre de clauses de $F$, alors \type{supprimer\_clause F i} modifie \type{F} pour que \type{F} code la formule logique obtenue en supprimant la clause d’indice $i$. La complexité de cette fonction doit être de l’ordre d’une constante, et donc ne pas dépendre du nombre de clauses de $F$ ni de la valeur de $i$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}On emploie la même technique. Bien que ce  ne soit pas explicitement décrit dans l'énoncé, le tableau peut avoir des lignes inutilisées.
+\begin{lstlisting}
+let supprimer_clause formule clause =
+  let n = formule.(0).(0) in
+  formule.(clause) <- formule.(n);
+  formule.(0).(0) <- (n-1);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{calculer\_diff : int array array -> int array} telle que, si \type{F} est un tableau de tableaux codant une formule logique $F$, alors \type{calculer\_diff F} renvoie un tableau d’entiers donnant pour chaque variable $\alpha$ de $F$ la valeur de $\diff(F, \alpha )$ décrite ci-dessus. 
+
+En supposant que toutes les variables (dont le nombre est \type{F.(0).(1)}) figurent effectivement dans $F$ directement ou par leur complémenté, cette fonction doit avoir une complexité de l’ordre de la somme des longueurs des clauses de $F$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On va inscrire $\diff(F,x)$ à la position $x$ donc on crée un tableau de longueur $p+1$ s'il y a $p$ variables.
+\begin{lstlisting}
+let calculer_diff formule  =
+  let nbCl = formule.(0).(0) in
+  let nbVar = formule.(0).(1) in
+  let diff = Array.make (nbVar +1) 0 in
+  for clause = 1 to nbCl do
+    for i = 1 to formule.(clause).(0) do
+      let litt = formule.(clause).(i) in
+      if litt > 0 
+      then diff.(litt) <- diff.(litt) +1
+      else diff.(-litt) <- diff.(-litt) - 1 done done;
+  diff;;
+\end{lstlisting}
+On effectue un nombre borné d'instructions pour chaque littéral donc la complexité est de l'ordre de la somme des longueurs des clauses.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+
+On s’intéresse maintenant à une transformation automatique d’une formule logique $F$ lorsqu’on pose qu’une variable $\alpha$ prend la valeur $v$.
+
+Si $v$ vaut {\it vrai}, on note $p$ le littéral $\alpha$ et sinon on note $p$ le littéral $\overline \alpha$. 
+
+$p$ prend donc la valeur {\it vrai} et son complémenté la valeur {\it faux}.
+
+Les clauses contenant $p$, prenant la valeur 1, sont supprimées de $F$. 
+
+Pour chaque clause contenant le complémenté de $p$, on retire ce complémenté ; 
+
+si une clause était
+réduite au complémenté de $p$, on supprime une telle clause. 
+
+Les clauses qui ne contiennent ni $p$ ni son complémenté sont inchangées. 
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{simplifier : int array array -> int -> bool -> int} telle que, si \type{F} est un tableau de tableaux d’entiers codant une formule logique $F$, si \type{a} est un entier représentant une variable $\alpha$ de $F$ et si \type{v} est un booléen, alors \type{simplifier F a v} transforme  \type{F} pour que  \type{F} code la formule logique obtenue à partir de $F$ selon la description donnée ci-dessus et renvoie le nombre de clauses de la formule logique $F$ initiale qui contenaient le littéral $p$ défini ci-dessus.
+
+Évaluer la complexité de la fonction \type{simplifier}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Quand on supprime une clause elle est remplacée par la dernière, il faut donc recommencer l'étude au même indice de clause. On ne peut donc pas utiliser une boucle \type{for} : il faut employer un boucle conditionnelle avec \type{while}.
+\begin{lstlisting}[numbers=left]
+let simplifier formule a v =
+  let litt = if v then a else -a in
+  let supp = ref 0 in
+  let clause = ref 1 in
+  while !clause <= formule.(0).(0) do
+    if place formule.(!clause) litt > 0
+    then begin
+         supprimer_clause formule !clause;
+         supp := !supp + 1 end
+    else begin
+         let j = place formule.(!clause) (-litt) in
+         if j > 0
+         then begin
+              supprimer_variable formule.(!clause) j;
+              if formule.(!clause).(0) = 0
+              then supprimer_clause formule !clause
+              else clause := !clause +1 end
+         else clause := !clause +1 end done;
+  !supp;;  
+\end{lstlisting}
+
+\begin{itemize}
+  \item Ligne 2 : on choisit le littéral vérifié par la valuation
+  \item Ligne 3 : on initialise le nombre de clauses satisfaites
+  \item Lignes 4\&5 : on parcourt les clauses. On peut noter que si on supprime la dernière clause alors \type{f.(0).(0)} a diminué et on sort de la boucle.
+  \item Lignes 6 à 9 : si la clause contient le littéral, on la supprime et on incrémente le nombre de clauses satisfaites. On n'incrémente pas la clause car elle est remplacée.
+  \item Lignes 10\&11 : on teste si la clause contient la négation du littéral.
+  \item Lignes 12 à  17 : si la clause contient la négation du littéral en $j$.
+  \begin{itemize}
+    \item On supprime le littéral (ligne 14);
+    \item on teste si la clause est vide (ligne 15),
+    \item si oui, on la supprime (ligne 16) et on reste à cet indice de clause car la clause est remplacée ; si c'était la dernière clause, le test de la boucle \type{while} donnera \type{false},
+    \item sinon,  on incrémente.
+  \end{itemize}.
+  \item Ligne 18 : si la clause ne contient ni le littéral ni sa négation du littéral on passe à la clause suivante.
+\end{itemize}
+
+Ici encore la complexité est de l'ordre de la somme des longueurs des clauses.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{heuristique : int array array -> int*bool array} telle que, si \type{F} est un tableau de tableaux d’entiers codant une formule logique $F$, alors \type{heuristique F} renvoie le nombre  de clauses satisfaites et la valuation qui les a satisfaites comme indiqués par l'heuristique.
+
+Évaluer la complexité de la fonction heuristique.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On commence par écrire la recherche de l'indice d'un maximum dans un tableau pour chercher la variable dont le \type{diff} est maximal. Cependant on doit choisir une variable qui n'a pas encore été affectée d'où l'usage d'un tableau d'indices libres
+
+\begin{lstlisting}
+let maxLibre diff libres =
+  let n = Array.length diff in
+  let kMax = ref 1 in
+  for k = 2 to n-1 do
+    if abs(diff.(k)) > abs(diff.(!kMax)) && libre.(k)
+    then kMax := var; libre.(k) <- false done;
+  !kMax;;    
+\end{lstlisting}
+
+On suit ensuite l'algorithme de l'énoncé en gérant le tableau des variable non encore affectées.
+
+\begin{lstlisting}
+let heuristique formule = 
+  let nbVar = formule.(0).(1) in 
+  let valeur = Array.make (nbVar+1) false in
+  let libres = Array.make (nbVar+1) true in
+  let nbSat = ref 0 in
+  valeur.(0) <- 0;
+  while formule.(0).(0) > 0 do
+    let diff = calculer_diff formule in
+    let a = maxLibre diff libres in
+    valeur.(a) <- (diff.(a) > 0);
+    nbSat := !nbSat + (simplifier formule a valeur.(a)) done;
+  valeur;;
+\end{lstlisting}
+
+Le nombre d'étape dans la boucle \type{while} est majoré par le nombre de clauses donc la complexité est un ${\cal O}(ml)$ où $m$ est le nombre de clauses et $l$ le nombres de littéraux dans les clauses.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Un cas particulier}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On revient au problème de la satisfiabilité. On s’intéresse dans cette partie à une formule logique dans laquelle {\bf chaque littéral apparaît au plus une fois et toutes les clauses sont de longueur au moins 2}. On appelle {\bf formule logique 1-occ} une telle formule logique. 
+
+Par exemple $F_4$ est une formule 1-occ pour
+
+$F_4 = (x \lor y \lor z) \land (\overline x \lor \overline z \lor t) \land (\overline y \lor \overline v) \land (u \lor v) \land (\overline t \lor \overline u)$.
+
+On cherche à déterminer une solution d’une formule logique 1-occ.
+
+\medskip
+On considère une formule logique 1-occ qui s’écrit :
+$F = (x \lor l_1 \lor l_2 \lor \cdots \lor l_k ) \land (\overline x \lor l_{k + 1} \lor \cdots \lor l_ {k + h} ) \land G$ où $x$ est une variable, $l_1, \ldots,l_{k + h}$ sont des littéraux et $G$ est une formule logique 1-occ éventuellement vide. On doit avoir $k \ge 1$ et $h \ge 1$.
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+{\bf a)}  Montrer que si $\{l_1, \ldots,l_{k + h}\}$ contient à la fois une variable et son complémenté, alors $F$ est satisfiable si et seulement si $G$ est satisfiable.
+ 
+ On dira dans ce cas que $F$ réduite par rapport à $x$ donne $G$.
+ 
+{\bf b)}  Si $\{l_1, \ldots,l_{k + h}\}$ ne contient jamais à la fois une variable et son complémenté, indiquer une formule logique 1-occ $F'$ ne contenant ni $x$ ni $\overline x$ telle que $F$ est satisfiable si et seulement si $F'$ est satisfiable. On dira dans ce cas que $F$ réduite par rapport à $x$ donne $F'$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}{\bf a)} 
+On note $y$ la variable telle que $y$ et $\overline y$ apparaissent dans $l_1,\ldots,l_k,l_{k+1},\ldots,l{k+h}$. 
+Ces deux littéraux ne peuvent pas appartenir à la même clause donc, si $y$ appartient à  $y\{\{l_1,\ldots,l_{k}\}$, on doit avoir $\overline y\in \{l_{k+1},\ldots,l_{k+h}\}$ et réciproquement. On peut supposer sans perte de généralité que $\{y,\overline y\} = \{l_1,l_{k+1}\}$.
+
+Ni $x$ ni $y$ n'apparaissent dans $G$. On a deux cas :
+
+\begin{itemize}
+  \item $F = (x\lor y \lor l_2 \cdots l_k) \land (\overline x\lor \overline y \lor l_{k+2} \cdots l_{k+h})\land G $ : dans ce cas toute solution de $G$ complétée  par $x= vrai$ et $y = faux$ est une solution de $F$.
+  \item $F = (x\lor \overline y \lor l_2 \cdots l_k) \land (\overline x\lor y \lor l_{k+2} \cdots l_{k+h})\land G $ : dans ce cas toute solution de $G$ complétée par $x= vrai$ et $y = faux$ est une solution de $F$.
+\end{itemize}
+
+Comme toute solution de $F$ définit une solution de $G$ on en déduit que $F$ est satisfiable si et seulement si $G$ est satisfiable.
+
+\medskip
+
+{\bf b)} Si les variables associées aux $l_i$ sont distinctes on définit
+
+$F' = (l_1 \lor l_2 \cdots l_k \lor l_{k+1} \lor l_{k+2} \cdots l_{k+h})\land G $.
+
+Les définitions indiquent que ni $x$ ni $\overline x$ n'apparaît dans $F'$ et que $F'$ est 1-occ.
+
+\begin{itemize}
+  \item Si $v$ est une valuation qui satisfait $F$ alors elle satisfait $G$. De plus, 
+  
+ si $v(x) = 0$, la satisfaction de $x \lor l_1 \lor l_2 \cdots l_k$ impose la satisfaction de $l_1 \lor l_2 \cdots l_k$
+ 
+  si $v(x)=1$, la satisfaction de $\overline x\lor l_{k+1} \lor  \cdots  \lor l_{k+h}$ impose celle de 
+  $l_{k+1} \lor \cdots \lor l_{k+h}$.
+  
+  Dans les deux cas $l_1 \lor l_2 \cdots l_k \lor l_{k+1} \lor l_{k+2} \cdots l_{k+h}$ donc $F'$ est satisfaite.
+  
+  \item Si $v$ est une valuation qui satisfait $F'$ alors elle satisfait $G$. De plus, 
+  
+\begin{itemize}
+  \item soit $l_1 \lor l_2 \cdots l_k$ est satisfaite donc, en posant $v(x)=0$,
+  
+  $(x\lor \overline y \lor l_2 \cdots l_k) \land (\overline x\lor y \lor l_{k+2} \cdots l_{k+h})$ est satisfaite
+  
+  \item soit $l_{k+1} \lor l_{k+2} \cdots l_{k+h}$ est satisfaite donc, en posant $v(x)=1$,
+  
+  $(x\lor \overline y \lor l_2 \cdots l_k) \land (\overline x\lor y \lor l_{k+2} \cdots l_{k+h})$ est satisfaite.
+\end{itemize}
+On a ainsi déterminé une valuation qui satisfait $F$.
+\end{itemize}
+
+$F$ est satisfiable si et seulement si $F'$ est satisfiable.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+Remarque : on rappelle que, par définition dans ce problème, une clause ne contient pas à la fois une variable et son complémenté et qu’une formule logique vide est considérée comme toujours satisfaite.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Indiquer la formule logique obtenue en réduisant 
+
+{\bf a)} $(x \lor y \lor z) \land (\overline x \lor \overline z \lor t) \land (\overline y \lor \overline t)$ par rapport à $x$,
+
+{\bf b)} $(\overline x \lor \overline z \lor t) \land (\overline t \lor \overline u) \land (z \lor u)$ par rapport à $t$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+{\bf a)} $(x \lor y \lor z)\land(\overline x \lor \overline z\lor t)\land(\overline y \lor \overline t)$ se réduit par rapport à $x$ en 
+$\overline y \lor \overline t$
+
+{\bf b)} $(\overline x \lor \overline z \lor t)\land(\overline t \lor \overline  u) \land(z \lor u)$ se réduit par rapport à $t$ en 
+$(\overline x \lor \overline z \lor \overline  u) \land(z \lor u)$
+\newpage
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Montrer que toute formule logique 1-occ est satisfiable.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+Les réductions permettent d'éliminer les variables qui apparaissent dans deux clauses. 
+
+Il reste à prouver qu'une  formule où les variables n'apparaissent qu'une fois est satisfiable : il suffit de donner la valeur 1 aux variables apparaissant directement et la valeur 0 sinon. 
+
+Le cas d'une formule devenue vide est trivial.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+ Décrire sans utiliser le langage de programmation une fonction récursive \type{calculer\_solution} qui prend en paramètre une formule logique 1-occ $F$ et qui renvoie une solution de $F$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+
+Si une formule est vide elle est satisfaite pour toute valuation : c'est le cas d'arrêt.
+
+Si une formule 1-occ, $F$, admet plusieurs variables on considère la variable de plus haut indice, $\zeta$.
+
+\begin{itemize}
+  \item Si $\zeta$ n’apparaît qu'une fois on lui donne la valeur qui rend le littéral associé vrai, on retire la clause la contenant et on obtient une formule 1-occ avec moins de variables : $F'$. On construit une valuation en complétant une valuation qui satisfait $F'$ obtenue récursivement, par la valeur de $\zeta$ calculée.
+  
+  \item Si $\zeta$ apparaît deux fois et qu'on effectue une réduction du type {\bf 20 a)} on calcule récursivement une valuation de $G$ et on attribue la valeur de $\zeta$ adaptée.
+  
+  \item De même si $\zeta$ apparaît deux fois et qu'on effectue une réduction du type {\bf 20 b)}.
+\end{itemize}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Appliquer la fonction précédente à la formule $F_4$. Détailler chaque appel récursif.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{itemize}
+  \item $F_4$ est satisfiable si et seulement si sa réduite par rapport à $v$, $F_5$, est statisfiable.
+  
+  $F_5 = (x \lor y \lor z) \land (\overline x \lor \overline z \lor t) \land(\overline t\lor \overline u) \land (\overline y \lor u)$.
+  \item On réduit $F_5$ par rapport à $u$ : $F_6 = (x \lor y \lor z) \land (\overline x \lor \overline z \lor t) \land(\overline t\lor \overline y)$.
+  
+  \item On réduit $F_6$ par rapport à $t$ : $F_7 = (x \lor y \lor z) \land (\overline x \lor \overline y \lor \overline z)$.
+  
+  \item On réduit $F_7$ par rapport à $z$, associé à $y$, on aboutit à la formule vide.
+  
+  \item On attribue une valeur quelconque à $x$, par exemple 0.
+    
+  \item Pour satisfaire $F_7$ on choisit $y =1$, $z = 0$.
+  
+  \item Dans $F_6$ on choisit $t =0$ pour satisfaire $\overline t\lor \overline y$.
+  
+  \item Dans $F_5$ on choisit $u =1$ pour satisfaire $\overline y \lor u$.
+  
+  \item Dans $F_4$ on choisit $v =0$ pour satisfaire $\overline y \lor \overline v$.
+  
+  \item On aboutit à \type{valeur = [|-1; 0; 1; 0; 0; 1; 0|]}.
+  
+\end{itemize}
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+
+
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Éléments de solutions}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\shipoutAnswer
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\end{document}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+Page 10 sur 11Épreuve d’informatique 2010
+❒ 20 – 
+❒ 21 – Exemples de réduction
+a) On considère la formule logique ) ; 
+b) On considère la formule logique ( x \lor z \lor t) \land ( t \lor u ) \land (z \lor u) ; indiquer la
+formule logique obtenue en réduisant celle-ci par rapport à t.
+❒ 22 – 
+❒ 23 –
+❒ 24 – Appliquer la fonction (ou la procédure) calculer_solution décrite dans la
+question précédente à la formule F4. Détailler chaque appel récursif.
+Page 11 sur 11
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip

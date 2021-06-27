@@ -1,0 +1,670 @@
+\input{styleDStout}
+\usepackage{enumitem}
+\def\numero{03}
+\def\classe{Option info MP1}
+
+\camltrue
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Couplages, mines 2012}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Généralités}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[h]
+\begin{minipage}{.5\linewidth}
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw, fill=gray!30}]
+\node (0a) at (0, 0) {$0_A$};
+\node (1a) at (0, -1) {$1_A$};
+\node (2a) at (0, -2) {$2_A$};
+\node (3a) at (0, -3) {$3_A$};
+\node (0b) at (1,  0) {$0_B$};
+\node (1b) at (1, -1) {$1_B$};
+\node (2b) at (1, -2) {$2_B$};
+\node (3b) at (1, -3) {$3_B$}; 
+\foreach \x/\y in {0/0, 0/1, 0/2, 1/3, 2/0, 2/1, 2/2, 2/3, 3/3} \draw (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_0$.}
+\end{minipage}
+\begin{minipage}{.5\linewidth}
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw, fill=gray}]
+\node (0a) at (0,0) {$0_A$};
+\node (1a) at (0,-1) {$1_A$};
+\node (2a) at (0,-2) {$2_A$};
+\node (3a) at (0,-3) {$3_A$};
+\node (0b) at (1,0) {$0_B$};
+\node (1b) at (1,-1) {$1_B$};
+\node (2b) at (1,-2) {$2_B$};
+\node (3b) at (1,-3) {$3_B$}; 
+\foreach \x/\y in {0/1, 0/2, 1/3, 2/0, 2/1, 2/2, 3/3} \draw (\x a) -- (\y b) ;
+\foreach \x/\y in {0/0, 2/3} \draw[ultra thick, red] (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_0$ et le couplage $C_0$.}
+\end{minipage}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Exhiber un couplage de cardinal 3 de $G_0$, puis indiquer s'il existe dans $G_0$ un couplage de cardinal 4. Justifier la réponse.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+$\bigl\{\{0_A,0_B\},\{1_A,3_B\},\{2_A,1_B\}\bigr\}$ est un couplage de cardinal 3 de $G_0$.
+
+Il n'existe pas de couplage de cardinal 4 car les sommets $1_A$ et $3_A$ ne peuvent être couplés qu'avec $3_B$, ainsi un seul de ces deux sommet peut appartenir à couplage, tout couplage ne peut concerner que 3 sommets de $A$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{verifie} telle que si \type{g} est une matrice codant le graphe $G$ et \type{c} un tableau codant le tableau $C$ alors \type{verifie g c} renvoie \type{true} si le tableau $C$ représente un couplage dans $G$ et \type{false} sinon.
+Indiquer la complexité de la fonction \type{verifie}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Pour chaque nouveau couplage rencontré il faut vérifier si l'arête correspondante existe dans le graphe et si elle n'est pas incidente à une arête déjà rencontrée. Pour cela on utilise un tableau \type{vu} qui indique si un sommet de $B$ a déjà été rencontré.
+\newpage
+\begin{lstlisting}
+let verifie g c =
+  let n = Array.length c in
+  let reponse = ref true in
+  let vu = Array.make n false in
+  for i = 0 to (n-1) do
+    let j = c.(i) in
+    if j <> -1 && not vu.(j)
+    then begin
+           reponse := !reponse && g.(i).(j);
+           vu.(j) <- true end done;
+  !reponse;;
+\end{lstlisting}
+La complexité est linéaire en $n$, le nombre de sommets.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{cardinal} telle que si \type{c} est un tableau codant un couplage alors \type{cardinal c} renvoie le cardinal de ce couplage.
+Indiquer la complexité de la fonction \type{cardinal}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let cardinal c = 
+  let n = Array.length c in
+  let reponse = ref 0 in
+  for i = 0 to (n-1) do
+    if c.(i) <> -1
+    then reponse := !reponse +1 done;
+  !reponse;;
+\end{lstlisting}
+La complexité est linéaire en $n$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Un couplage maximal}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Appliquer \type{algo\_approche} au graphe $G_0$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Les degrés dans $A$ sont $3,1,4,1$ ; les degrés dans $B$ sont $2,2,2,3$.
+\begin{enumerate}
+\item Les arêtes de somme minimum 4 sont $(1, 3)$ et $(3, 3)$. On choisit par exemple, $(1, 3)$.
+\item Les degrés dans $A$ et $B$ sont alors $3,\_,3,0$ et $2,2,2,\_$.
+\item Toutes les arêtes restantes ont pour somme 5. On choisit par exemple, $(0, 0)$.
+\item Il ne reste que $(2 , 1)$ et $(2,2)$ de somme 3 chacune. On choisit par exemple, $(2,1)$.
+\item Le graphe restant n'a plus d'arêtes.
+\item On obtient ainsi $C=\{(1, 3), (0, 0), (2, 1)\}$ qui est bien maximal.
+\end{enumerate}
+\end{Answer}
+%-------------------------------------------------------------------------------
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw, fill=gray!30}]
+\node (0a) at (0, 0) {$0_A$};
+\node (1a) at (1, 0) {$1_A$};
+\node (2a) at (2, 0) {$2_A$};
+\node (3a) at (3, 0) {$3_A$};
+\node (4a) at (4, 0) {$4_A$};
+\node (5a) at (5, 0) {$5_A$};
+\node (0b) at (0, 1) {$0_B$};
+\node (1b) at (1, 1) {$1_B$};
+\node (2b) at (2, 1) {$2_B$};
+\node (3b) at (3, 1) {$3_B$}; 
+\node (4b) at (4, 1) {$4_B$}; 
+\node (5b) at (5, 1) {$5_B$}; 
+\foreach \x/\y in {0/0, 0/1, 1/0, 1/1, 2/0, 2/1, 2/2, 3/2, 3/3, 4/3, 4/4, 4/5, 5/3, 5/4, 5/5} \draw (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_1$.}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Déterminer la première arête $a_1$ choisie par \type{algo\_approche} appliqué à $G_1$ ; 
+
+tracer le graphe obtenu après suppression de $a_1$ et des arêtes incidentes à $a_1$. 
+
+Montrer que le couplage obtenu par \type{algo\_approche} est de cardinal au plus $5$ 
+
+et indiquer s'il est de cardinal maximal parmi les couplages de $G_1$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Dans $G_1$ toutes les arêtes ont une somme des degrés des extrémités égale à 4, 5 ou 6. Une seule a une somme égale à 4 : l'arête $a_1=\{3_A,2_B\}$. Une fois celle-ci éliminée ainsi que les arêtes incidentes il reste le graphe :
+\begin{center}
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw}]
+\node (0a) at (0, 0) {$0_A$};
+\node (1a) at (1, 0) {$1_A$};
+\node (2a) at (2, 0) {$2_A$};
+\node (3a) at (3, 0) {$3_A$};
+\node (4a) at (4, 0) {$4_A$};
+\node (5a) at (5, 0) {$5_A$};
+\node (0b) at (0, 1) {$0_B$};
+\node (1b) at (1, 1) {$1_B$};
+\node (2b) at (2, 1) {$2_B$};
+\node (3b) at (3, 1) {$3_B$}; 
+\node (4b) at (4, 1) {$4_B$}; 
+\node (5b) at (5, 1) {$5_B$}; 
+\foreach \x/\y in {0/0, 0/1, 1/0, 1/1, 2/0, 2/1, 4/3, 4/4, 4/5, 5/3, 5/4, 5/5} \draw (\x a) -- (\y b) ;
+\end{tikzpicture}
+\end{center}
+Chacune de deux composantes connexes du graphe contient 2 couplages au maximum donc l'algorithme retournera un couplage de cardinal inférieur ou égal à 5. Or il existe un couplage de cardinal 6 : $\{\{0_A, 0_B\}, \{1_A, 1_B\}, \{2_A, 2_B\}, \{3_A, 3_B\}, \{4_A, 4_B\}, \{5_A, 5_B\}\}$ ; l'algorithme ne garantit donc pas d'obtenir un couplage de cardinal maximal.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{arete\_min} qui détermine une arête de $G$ dont la somme des degrés des extrémités soit minimum. Si le graphe possède au moins une arête, cette fonction modifie le tableau $a$ de deux entiers reçu en paramètre pour mettre dans les deux cases de $a$ les numéros des deux extrémités d'une arête qui atteint ce minimum ; dans ce cas la fonction renvoie la valeur \type{true} ; sinon elle renvoie la valeur \type{false}.
+Indiquer la complexité de la fonction \type{arete\_min}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On commence par rédiger une fonction qui calcule les degrés des sommets de $A$ et des sommets de $B$ :
+\begin{lstlisting}
+let calcule_degre g =
+  let n = Array.length g in
+  let degA = Array.make n 0 in
+  let degB = Array.make n 0 in
+  for i = 0 to n-1 do
+    for j = 0 to n-1 do
+      if g.(i).(j) 
+      then begin degA.(i) <- degA.(i) + 1; 
+                 degB.(j) <- degB.(j) + 1 end done done;
+  degA, degB;;
+\end{lstlisting}
+Cette première fonction est de complexité quadratique.
+
+Il reste ensuite à partir à la recherche de l'arête minimale :
+\begin{lstlisting}
+let arete_min g a =
+  let n = Array.length g in
+  let degA, degB = calcule_degre g in
+  let s = ref (2 * n + 1) in
+  for i = 0 to n-1 do
+    for j = 0 to n-1 do
+      if g.(i).(j) && degA.(i) + degB.(j) < !s 
+      then begin s := degA.(i) + degB.(j); 
+                 a.(0) <- i; 
+                 a.(1) <- j end
+    done
+  done;
+  !s <= 2 * n;;
+\end{lstlisting}
+On notera que la somme des degrés des extrémités d'une arête ne peut excéder $2n$, ce qui explique la valeur initiale de la référence \type{s}.
+
+Cette fonction est aussi de complexité quadratique.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{supprimer} telle que si \type{g} est une matrice codant un graphe biparti équilibré $G$ et\type{a} un tableau de deux entiers codant une arête $a$ de $G$ alors \type{supprimer g a} modifie \type{g} pour que, après modifications, \type{g} code le graphe obtenu à partir de $G$ en supprimant $a$ ainsi que toutes les arêtes incidentes à $a$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let supprimer g a =
+  let n = Array.length g in
+  let i = a.(0) and j = a.(1) in
+  for k = 0 to n-1 do
+    g.(i).(k) <- false; 
+    g.(k).(j) <- false done;;
+\end{lstlisting}
+\end{Answer}
+Cette fonction est de coût linéaire.
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{algo\_approche} telle que si \type{g} est une matrice qui code un graphe biparti équilibré $G$, \type{algo\_approche} effectue \type{algo\_approche} à partir d'une copie de $G$ et renvoie un tableau codant le couplage obtenu.
+Indiquer la complexité de la fonction \type{algo\_approche}.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+La fonction \type{Array.copy} réalise la copie d'un tableau, on peut d donc écrire
+\begin{lstlisting}
+let copy_matrix m = 
+  let n = Array.length m in
+  Array.init n (fun i -> Array.copy m.(i));;
+\end{lstlisting}
+On définit la fonction principale de l'algorithme \emph{algo\_approche} :
+\begin{lstlisting}
+let algo_approche g =
+  let gg = copy_matrix g in
+  let n = Array.length g in
+  let c = Array.make n (-1) in
+  let a = [| 0; 0 |] in
+  while arete_min gg a do
+    c.(a.(0)) <- a.(1);
+    supprimer gg a done;
+  c;;
+\end{lstlisting}
+Sachant que le coût de la fonction \type{arete\_min} est un ${\cal O}(n^2)$ et qu'un couplage maximal comporte au maximum $n$ couplages, le coût total de cet algorithme est en un ${\cal O}(n^3)$
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Recherche exhaustive}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{une\_arete} telle que si \type{g} est une matrice codant un graphe $G$ et \type{a} un tableau de deux entiers alors \type{une\_arete g a} modifie le tableau \type{a} en y inscrivant les indice d'une arête dans le cas où $G$ possède au moins une arête.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let une_arete g a =
+  let n = Array.length g in
+  let trouve = ref false in
+  let i = ref 0 in
+  let j = ref 0 in
+  while !i < 9 && not !trouve do
+    if g.(!i).(!j)
+    then begin a.(0) <- !i; 
+               a.(1) <- !j; 
+               trouve := true end
+    else begin if j = 8 then (i := !i +1; j := 0)
+                        else (j := !j + 1) end done;
+  !trouve;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction récursive \type{meilleur\_couplage} telle que, si \type{g} est une matrice codant un graphe biparti équilibré $G$, \type{meilleur\_couplage g} renvoie un tableau codant un couplage de cardinal maximal dans $G$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Lorsque le graphe $G$ contient au moins une arête $a$, on réalise deux copies $G_1$ et $G_2$ de $G$. Dans la première on supprime l'arête $a$ et dans la seconde l'arête $a$ ainsi que toutes les arêtes incidentes.
+
+Tout couplage $C_1$ de $G_1$ est un couplage de $G$ ne contenant pas l'arête $a$ ; tout couplage $C_2$ de $G_2$ à qui on ajoute $a$ est un couplage de $G$ contenant l'arête $a$. Ceci conduit à l'algorithme suivant :
+\begin{lstlisting}
+let rec meilleur_couplage g =
+  let n = Array.length g in
+  let a = [| 0; 0 |] in
+  if une_arete g a 
+  then begin
+      let g1 = copy_matrix g in
+      g1.(a.(0)).(a.(1)) <- false;
+      let g2 = copy_matrix g in
+      supprimer g2 a;
+      let c1 = meilleur_couplage g1 in
+      let c2 = meilleur_couplage g2 in
+      c2.(a.(0)) <- a.(1);
+      if cardinal c1 < cardinal c2 then c2 else c1
+    end
+  else Array.make n (-1);;
+\end{lstlisting}
+
+Les complexités temporelles et spatiales sont monstrueuses : de l'ordre de $n^2.2^{n^2}$.
+
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\section{L'algorithme hongrois}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw}]
+\node (0a) at (0, 0) {$0_A$};
+\node (1a) at (1, 0) {$1_A$};
+\node (2a) at (2, 0) {$2_A$};
+\node (3a) at (3, 0) {$3_A$};
+\node (4a) at (4, 0) {$4_A$};
+\node (5a) at (5, 0) {$5_A$};
+\node (0b) at (0, 1) {$0_B$};
+\node (1b) at (1, 1) {$1_B$};
+\node (2b) at (2, 1) {$2_B$};
+\node (3b) at (3, 1) {$3_B$}; 
+\node (4b) at (4, 1) {$4_B$}; 
+\node (5b) at (5, 1) {$5_B$}; 
+\foreach \x/\y in {0/0, 0/1, 1/0, 1/1, 2/0, 2/1, 2/2, 3/2, 3/3, 4/3, 4/4, 4/5, 5/3, 5/4, 5/5} \draw (\x a) -- (\y b) ;
+\foreach \x/\y in {0/0, 1/1, 3/2, 4/3, 5/5} \draw[very thick, red] (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_1$ et le couplage $C_1$}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Après avoir indiqué le seul sommet de $A$ qui puisse être l'origine d'une chaîne alternée augmentante relativement à $C_1$ et le seul sommet $B$ qui puisse être l'extrémité d'une chaîne alternée augmentante relativement à $C_1$, déterminer une chaîne alternée augmentante relativement à $C_1$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Le seul sommet non couplé de $A$ est le sommet $2_A$; il doit être au départ de toute chaîne alternée relativement à $C_1$.
+Le seul sommet non couplé de $B$ est le sommet $4_B$ ; il doit être à l'arrivée de toute chaîne alternée augmentante relativement à $C_1$.
+
+Une chaîne alternée augmentante peut être $2_A,2_B,3_A,3_B,4_A,4_B$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+On considère un graphe biparti équilibré $G$ et un couplage $C$ dans $G$. Montrer que s'il existe une chaîne alternée augmentante relativement à $C$ alors il existe dans $G$ un couplage dont le cardinal est égal au cardinal de $C$ augmenté de 1.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Supposons que $(x_0 , x_1 , \ldots, x_{2p+1} )$ soit une chaîne alternée augmentante relativement à un couplage $C$.
+Soit le couplage $C'$ obtenu à partir de $C$ en supprimant les $p$ arêtes $(x_{2k+1} , x_{2k+2} )$ pour $0 \le k < p$ et en ajoutant les $p+1$ arêtes ($x_{2k} , x_{2k+1} )$ pour $0 \le k \le p$. Les sommets $x_1, x_2, \ldots, x_{2p}$ ont perdu leur couplage en ôtant les arêtes de la forme $(x_{2k+1} , x_{2k+2} )$ donc on peut les coupler de nouveau en ajoutant aussi les sommets $x_0$ et $x_{2p+1}$.
+
+Les arêtes ajoutées sont bien dans le graphe par définition d'une chaîne alternée donc on obtient bien  un couplage de graphe.
+De plus son cardinal a été augmenté de 1.
+\end{Answer}
+%-------------------------------------------------------------------------------
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[xscale=2,vrai/.style={inner sep=0pt, minimum width = 16pt, circle, draw}]
+\node[vrai, fill=gray!30,label=below:0] (0a) at (0, 0) {$0_A$};
+\node[vrai, fill=gray!30,label=below:-1] (1a) at (1, 0) {$1_A$} ;
+\node[vrai, fill=gray!30,label=below:1] (2a) at (2, 0) {$2_A$};
+\node[vrai, fill=gray!30,label=below:2] (3a) at (3, 0) {$3_A$};
+\node[vrai,label=below:-1] (4a) at (4, 0) {$4_A$};
+\node[vrai,label=below:-1] (5a) at (5, 0) {$5_A$};
+\node[vrai, fill=gray!30,label=above:1] (0b) at (0, 1) {$0_B$};
+\node[vrai, fill=gray!30,label=above:0] (1b) at (1, 1) {$1_B$};
+\node[vrai, fill=gray!30,label=above:2] (2b) at (2, 1) {$2_B$};
+\node[vrai, fill=gray!30,label=above:3] (3b) at (3, 1) {$3_B$}; 
+\node[vrai,label=above:-1] (4b) at (4, 1) {$4_B$}; 
+\node[vrai,label=above:-1] (5b) at (5, 1) {$5_B$}; 
+\foreach \x/\y in {0/0, 0/1, 1/0, 1/1, 2/0, 2/1, 2/2, 3/2, 3/3, 4/3, 4/4, 4/5, 5/3, 5/4, 5/5} \draw (\x a) -- (\y b) ;
+\foreach \x/\y in {0/0, 2/1, 3/2, 4/4, 5/5} \draw[very thick, red] (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_1$ et le couplage $C'_1$, les sommets atteints sont grisés}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Utiliser les marques pour reconstituer la chaîne alternée arrivant dans le sommet $3_B$ et correspondant aux marques.
+Indiquer s'il s'agit d'une chaîne alternée augmentante relativement à $C'_1$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+En partant de l'extrémité $3B$ , on remonte la chaîne grâce aux marques. On obtient ainsi la chaîne alternée $(1A , 0B , 0A , 1B , 2A , 2B , 3A , 3B )$. Comme $3B$ n'est pas couplé dans $C_1$ et appartient à $B$, il s'agit bien d'une chaîne alternée augmentante de $C_1$.
+
+On augmente alors le couplage en
+ $(0A , 1B ), (1A , 0B ), (2A , 2B ), (3A , 3B ), (4A , 4B ), (5A , 5B )$.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{actualiser} telle que si \type{c}, \type{r}, \type{mA}, \type{mB} sont des tableaux de $n$ entiers qui correspondent à un couplage, sa réciproque et les tableaux des marques d'une chaîne alternée augmentante et si \type{numero} est un entier donnant le numéro de $x_p$ alors \type{actualiser c r mA mB numero} modifie les tableaus \type{c} et \type{r} pour obtenir un couplage de cardinal égal à celui de $C$ augmenté de 1.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On remonte la chaîne augmentante grâce aux marques en partant de l'extrémité $x_p$ sous la forme d'un indice $j$ tel que $x_p=j$.
+
+\begin{itemize}
+  \item On lit \texttt{i = mB[j]} ; on crée l'arête $(i,j)$ dans le couplage.
+   \item Pour cela on place $i$ dans \texttt{R[j]} et $j$ dans \texttt{C[i]}
+  \item On lit une nouvelle valeur de $j$ dans \texttt{mA[i]}
+  \item On recommence si $j$ est différent de $-1$.
+\end{itemize}
+
+
+\begin{lstlisting}
+let rec actualiser cpl inv mA mB numero =
+  let i = mB.(numero) in 
+  cpl.(i) <- numero;
+  inv.(numero) <- i;
+  let j = mA.(i) in
+  if j <> -1
+  then actualiser cpl inv mA mB j;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw}]
+\node (0a) at (0, 0) {$0_A$};
+\node (1a) at (1, 0) {$1_A$} ;
+\node (2a) at (2, 0) {$2_A$};
+\node (3a) at (3, 0) {$3_A$};
+\node (4a) at (4, 0) {$4_A$};
+\node (0b) at (0, 1) {$0_B$};
+\node (1b) at (1, 1) {$1_B$};
+\node (2b) at (2, 1) {$2_B$};
+\node (3b) at (3, 1) {$3_B$}; 
+\node (4b) at (4, 1) {$4_B$}; 
+\foreach \x/\y in {0/0, 0/1, 0/2, 1/3, 1/4, 2/0, 2/1, 2/2, 2/3, 3/3, 3/4, 4/3, 4/4} \draw (\x a) -- (\y b);
+\foreach \x/\y in {0/0, 2/2, 3/3, 4/4} \draw[very thick, red] (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_2$ et le couplage $C_2$}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Recopier la figure, encadrer tous les sommets qui peuvent être atteints et préciser à côté des sommets les marques obtenues. 
+
+Indiquer s'il existe dans $G_2$ une chaîne alternée augmentante relativement à $C_2$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw}]
+\node[label=below:-1] (0a) at (0, 0) {$0_A$};
+\node[fill=gray!30,label=below:-1] (1a) at (1, 0) {$1_A$} ;
+\node[label=below:-1] (2a) at (2, 0) {$2_A$};
+\node[fill=gray!30,label=below:3] (3a) at (3, 0) {$3_A$};
+\node[fill=gray!30,label=below:4] (4a) at (4, 0) {$4_A$};
+\node[label=above:-1] (0b) at (0, 1) {$0_B$};
+\node[label=above:-1] (1b) at (1, 1) {$1_B$};
+\node[label=above:-1] (2b) at (2, 1) {$2_B$};
+\node[fill=gray!30,label=above:1] (3b) at (3, 1) {$3_B$}; 
+\node[fill=gray!30,label=above:3] (4b) at (4, 1) {$4_B$}; 
+\foreach \x/\y in {0/0, 0/1, 0/2, 1/3, 1/4, 2/0, 2/1, 2/2, 2/3, 3/3, 3/4, 4/3, 4/4} \draw (\x a) -- (\y b);
+\foreach \x/\y in {0/0, 2/2, 3/3, 4/4} \draw[very thick, red] (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_2$ et le premier marquage}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[xscale=2,every node/.style={inner sep=0pt, minimum width = 16pt, circle, draw}]
+\node[label=below:-1] (0a) at (0, 0) {$0_A$};
+\node[fill=gray!30,label=below:-1] (1a) at (1, 0) {$1_A$} ;
+\node[label=below:-1] (2a) at (2, 0) {$2_A$};
+\node[fill=gray!30,label=below:3] (3a) at (3, 0) {$3_A$};
+\node[fill=gray!30,label=below:4] (4a) at (4, 0) {$4_A$};
+\node[label=above:-1] (0b) at (0, 1) {$0_B$};
+\node[label=above:-1] (1b) at (1, 1) {$1_B$};
+\node[label=above:-1] (2b) at (2, 1) {$2_B$};
+\node[fill=gray!30,label=above:4] (3b) at (3, 1) {$3_B$}; 
+\node[fill=gray!30,label=above:1] (4b) at (4, 1) {$4_B$}; 
+\foreach \x/\y in {0/0, 0/1, 0/2, 1/3, 1/4, 2/0, 2/1, 2/2, 2/3, 3/3, 3/4, 4/3, 4/4} \draw (\x a) -- (\y b);
+\foreach \x/\y in {0/0, 2/2, 3/3, 4/4} \draw[very thick, red] (\x a) -- (\y b) ;
+\end{tikzpicture}
+\caption{Le graphe $G_2$ et le second marquage}
+\end{figure}
+%-------------------------------------------------------------------------------
+
+Les deux seules chaînes alternées (maximales) sont $(1A , 3B , 3A , 4B , 4A )$ et 
+$(1A , 4B , 4A , 3B , 3A )$ ; aucune n'est augmentante.
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Définir ce qu'on appelle récursivité croisée et indiquer comment elle peut être implémentée en \type{OCaml}, puis écrire les deux fonctions \type{chercherA} et \type{chercherB} ; chacune de ces deux fonctions reçoit en paramètres une matrice \type{g} codant le graphe $G$, les quatre tableaux \type{c}, \type{r}, \type{mA}, \type{mB} et un entier codant le numéro du sommet de départ de la recherche.
+
+Ces deux fonctions modifient les tableaux \type{mA} et \type{mB} et renvoient le numéro d'un sommet non couplé de $B$ ou la valeur $-1$ selon le cas.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+La récursivité croisée consiste à déterminer en même temps deux fonctions dont chacune fait appel à l'autre. Elles sont définies par un même \type{let} et leurs définitions sont séparées par un \type{and}.
+
+\medskip
+On commence par chercher la liste des voisins d'un sommet de $A$:
+\begin{lstlisting}
+let voisinsB i g =
+  let n = Array.length g in
+  let l = ref [] in
+  for j = 0 to (n-1) do
+    if g.(i).(j) then l := j::(!l) done;
+  !l;;
+\end{lstlisting}
+
+La recherche à partir de $B$ est simple : 
+
+\begin{itemize}
+  \item si le sommet est couplé, on suit le couplage
+  \item sinon on a trouvé un point
+\end{itemize}
+
+Pour la recherche à partir de $A$ 
+
+\begin{itemize}
+  \item (2) : on définit une fonction auxiliaire qui parcourt une liste de sommets adjacents à $i$
+  \item (3) : s'il n'y en a plus on renvoie -1
+  \item (5) : si un sommet n'est pas couplé à $i$ et n'est pas marqué, on teste en (7)
+  
+        sinon on continue la recherche en (13)
+  \item (7-8) : on le marque avec $i$ et on cherche (dans $B$) à partir de lui
+  \item (9-10) : si cela n'aboutit pas on dé-marque le sommet et on continue la recherche
+  \item (11) : si la recherche aboutit on a trouvé
+\end{itemize}
+
+\begin{lstlisting}[numbers=left]
+let rec chercherA g c inv mA mB i =
+  let rec aux liste =
+    match liste with
+    |[] -> -1
+    |t::q -> if t <> c.(i) && mB.(t) = -1
+             then begin mB.(t) <- i;
+                  let rep = chercherB g c inv mA mB t in
+                  if rep = -1
+                  then (mB.(t) <- -1; aux q)
+                  else rep end 
+             else aux q in
+  aux (voisinsB i g)
+and chercherB g c inv mA mB j =
+   match inv.(j) with
+   |(-1) -> j
+   |i -> mA.(i) <- j;
+         chercherA g c inv mA mB i;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{chaine\_alternee} telle que si \type{g} est une matrice codant le graphe $G$, \type{c}, \type{r}, \type{mA} et \type{mB} des tableaux, toutes les cases de \type{mA} et \type{mB} étant initialisées à $-1$, alors \type{chaine\_alternee g c r mA mB} renvoie :
+\begin{itemize}
+  \item $-1$ s'il n'existe pas de chaîne alternée augmentante ;
+  \item le numéro de l'extrémité d'une chaîne alternée augmentante dans le cas contraire.
+\end{itemize}
+De plus, la fonction modifie les tableaux \type{mA} et \type{mB} pour qu'ils contiennent les marques des sommets à la fin de l'exécution de la fonction.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+On parcourt dans l'ordre les sommets de $A$ jusqu'à trouver un éventuel sommet non couplé origine d'une chaîne
+alternée augmentante. Ne pas oublier de ré-initialiser les tableaux de marquage à chaque étape.
+
+\begin{lstlisting}
+let chaine_alternee g c inv mA mB =
+  let n = Array.length c in
+  let rec aux i =
+    if i = n
+    then -1
+    else begin for k = 0 to (n-1) do mA.(k) <- -1 done;
+        for k = 0 to (n-1) do mB.(k) <- -1 done;
+        let j = chercherA g c inv mA mB i in
+        if j = -1 then aux (i+1) else j end in
+  aux 0;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire  la fonction \type{algorithme\_hongrois} telle que si \type{g} est une matrice codant un graphe biparti équilibré $G$, alors \type{algorithme\_hongrois g} renvoie un tableau codant le couplage obtenu par l'algorithme hongrois.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Le programme consiste  
+\begin{itemize}
+  \item à partir d'un couplage (le premier étant le couplage vide)
+  \item on marque les sommets (\type{mA} et \type{mB}) avec -1
+  \item on cherche une chaîne alternée augmentante avec \type{chaine\_alternee}, cela modifie \type{mA} et \type{mB}
+  \item s'il en existe une on augmente de couplage avec \type{actualiser}, cela modifie \type{c} et \type{inv} et on recommence
+\end{itemize}
+L'algorithme termine car a chaque tour de boucle le cardinal du couplage augmente de une unité : la boucle effectue au plus $n$ passages.
+\begin{lstlisting}
+let algorithme_hongrois g = 
+  let n = Array.length g in
+  let c = Array.make n (-1) in
+  let inv = Array.make n (-1) in
+  let encore = ref true in
+  while !encore do
+    let mA = Array.make n (-1) 
+    and mB = Array.make n (-1) in
+    let num = chaine_alternee g c inv mA mB in
+    if (num <> -1) 
+    then actualiser c inv mA mB num
+    else encore := false done;
+  c;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\end{document}
+
+
+
+
+
+\question
+On suppose donnés un graphe biparti équilibré $G$ d'ordre $2n$ et un couplage $C$ dans $G$. Tous les sommets de $G$ possèdent une marque égale à $-1$.
+
+La fonction \type{chaîne\_alternee} cherche s'il existe une chaîne alternée augmentante en appliquant la fonction \type{chercherA} successivement à partir des sommets non couplés de $A$.
+
+
+\question
+Dans cette question on programme l'algorithme hongrois.
+
+
+
+\end{document}

@@ -1,0 +1,402 @@
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+\chapter{Expressions régulières}
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+\thispagestyle{empty}
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------
+On veut, dans ce TP, utiliser des expressions régulières.
+
+
+Une expression régulière sera une chaîne de caractères dont les seuls caractères admis sont \type{ 0, 1, (, ), +, ., *} et les lettres de l'alphabet. On convient que \type{0} représente le vide et \type{1} le mot vide ($\varepsilon$). Le produit doit être noté avec un point.
+
+On codera en Caml une expression régulière par l'arbre qui lui est associé. Le type est
+\begin{lstlisting}
+type arbreER =  Vide
+               |Eps
+               |Feuille of char
+               |Etoile of arbreER
+               |Plus of arbreER*arbreER
+               |Fois of arbreER*arbreER;;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it
+Écrire une fonction \type{ecrire : arbreER -> string} qui renvoie l'expression régulière associée à un arbre en utilisant le parcours infixe parenthésé.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} 
+\begin{lstlisting}
+let rec ecrire arbre =
+  match arbre with
+  |Vide -> "0"
+  |Eps -> "1"
+  |Feuille c -> Char.escaped c
+  |Etoile f ->  "(" ^ (ecrire f) ^ "*)"
+  |Plus (fg, fd) -> "(" ^ (ecrire fg) ^ "+" ^ (ecrire fd) ^ ")"
+  |Fois (fg, fd) -> "(" ^ (ecrire fg) ^ "." ^ (ecrire fd) ^ ")";;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+La concaténation de chaînes de caractère s'écrit \type{\^{}}.
+
+La fonction \type{Char.escaped} permet de convertir un caractère\footnote{Seulement les lettres basiques, pas les lettres accentuées.} en une chaîne de longueur 1. 
+\medskip
+
+Par exemple \type{"(1+(a.(b*)))"} est le résultat de \type{ecrire} appliqué à
+
+\type{Plus (Eps, Fois (Feuille 'a', Etoile (Feuille 'b')))}.
+
+\medskip
+
+On peut exécuter l'opération inverse ; dans le cas d'une écriture bien parenthésée, un algorithme "élémentaire" est possible.
+
+On définit une exception qui renvoie l'endroit où se situe un problème.
+\begin{lstlisting}
+exception ChaineFautive of int;;               
+\end{lstlisting}
+
+On définit une fonction auxiliaire récursive qui permet de lire une portion de chaîne qui a un sens, entre deux parenthèses associées, et qui renvoie aussi la position du caractère suivant. Ce caractère devra être un opérateur \type{'+'}, \type{'*'} ou \type{'.'}. 
+
+\newpage
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let lire chaine =
+  let rec aux i =
+    match chaine.[i] with
+    |'0' -> Vide, i+1 
+    |'1' -> Eps, i+1 
+    |'(' -> begin let fg, k = aux (i+1) in
+                    match chaine.[k] with
+                    |')' -> fg, k+1
+                    |'*' -> if chaine.[k+1] = ')'
+                            then Etoile fg, k+2
+                            else raise (ChaineFautive (k+1))
+                    |'+' -> let fd, p = aux (k+1) in
+                            if chaine.[p] =  ')'
+                            then Plus (fg, fd), p+1
+                            else raise (ChaineFautive p)
+                    |'.' -> let fd, p = aux (k+1) in
+                            if chaine.[p] =  ')'
+                            then Fois (fg, fd), p+1
+                            else raise (ChaineFautive p)
+                    |_ -> raise (ChaineFautive k) end
+    |c -> Feuille c, i+1 in
+  let arbre, n = aux 0 in
+    if n = String.length chaine 
+    then arbre 
+    else raise (ChaineFautive n);;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Premières fonctions}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+\it Écrire une fonction \type{est0 : arbreER -> bool} qui reçoit une expression régulière (sous forme d'un arbre) et qui renvoie \type{true} ou \type{false} selon que le langage dénoté par l'expression régulière est vide ou non.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec est0 arbre = 
+  match arbre with
+  |Vide -> true
+  |Eps -> false
+  |Feuille c -> false
+  |Etoile f -> true
+  |Plus (fg, fd) -> est0 fg && est0 fd
+  |Fois (fg, fd) -> est0 fg || est0 fd;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+{\it Écrire une fonction \type{contient1 : arbreER -> bool} qui reçoit une expression régulière (sous forme d'un arbre) et qui renvoie \type{true} ou \type{false} selon que le langage dénoté par l'expression régulière contient ou non le mot vide $\varepsilon$.}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec contient1 arbre = 
+  match arbre with
+  |Feuille c -> false
+  |Vide -> false
+  |Eps -> true
+  |Etoile f -> true
+  |Plus (fg, fd) -> contient1 fg || contient1 fd
+  |Fois (fg, fd) -> contient1 fg && contient1 fd;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+{\it Écrire les fonctions qui permettent de calculer 
+\begin{enumerate}
+\item les premières lettres des mots non vides de $L$
+\item les dernières lettres des mots non vides de $L$
+\item les facteurs de 2 lettres des mots de longueur au moins 2 de $L$
+\end{enumerate} 
+
+où $L$ est le langage dénoté par une expression régulière passée en paramètre.
+
+Les résultats devront être des listes de chaînes de caractères.}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+On commence par des fonctions d'union de liste.
+
+\begin{lstlisting}
+let rec inserer x liste =
+  match liste with
+  |[] -> [x]
+  |t::q when t = x -> liste
+  |t::q -> t :: (inserer x q);;  
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec fusion liste1 liste2 =
+  match liste1 with
+  |[] -> liste2
+  |t::q -> fusion q (inserer t liste2);;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec prefixes arbre = 
+  match arbre with
+  |Vide -> []
+  |Eps -> []
+  |Feuille c -> [c]
+  |Etoile f -> prefixes f
+  |Plus (fg, fd) -> fusion (prefixes fg) (prefixes fd)
+  |Fois (fg, fd) -> if contient1 fg
+                       then fusion (prefixes fg) (prefixes fd)
+                       else prefixes fg;; 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec suffixes arbre = 
+  match arbre with
+  |Vide -> []
+  |Eps -> []
+  |Feuille c -> [c]
+  |Etoile f -> suffixes f
+  |Plus (fg, fd) -> fusion (suffixes fg) (suffixes fd)
+  |Fois (fg, fd) -> if contient1 fd
+                       then fusion (suffixes fg) (suffixes fd)
+                       else suffixes fd;; 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec coller x liste =
+  match liste with
+  |[] -> []
+  |t::q -> (x ^ t) :: (coller x q);;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec collage liste1 liste2 =
+  match liste1 with
+  |[] -> []
+  |t::q -> (coller t liste2) @ (collage q liste2);;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec facteurs arbre = 
+  match arbre with
+  |Vide -> []
+  |Eps -> []
+  |Feuille c -> []
+  |Etoile f -> union (facteurs f) (collage (suffixes f) (prefixes f))
+  |Plus (fg, fd) -> union (facteurs fg) (facteurs fd)
+  |Fois (fg, fd) -> union (collage (suffixes fg) 
+                                      (prefixes fd))
+                             (union (facteurs fg) 
+                                    (facteurs fd));;
+\end{lstlisting}
+\newpage
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Rationalité de langages transformés}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On reprend un exercice du chapitre.
+
+On suppose que $L$ est un langage rationnel sur ${\cal A}$ ($a\in{\cal A}$).
+
+On va prouvef que chacun des langages suivants est rationnel.
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+\item Le langage des mots préfixes des mots de $L$.
+\item L'ensemble des mots de $L$ qui ne contiennent pas $a$.
+\item L'ensemble des mots de $L$ qui contiennent $a$.
+\item L'ensemble des mots obtenus en enlevant le premier $a$ dans les mots de $L$ contenant $a$
+\item L'ensemble des mots obtenus en enlevant un $a$ dans les mots de $L$ contenant $a$
+\end{enumerate}
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+{\it Pour chacune de ces questions écrire une fonction qui reçoit un arbre associé à une expression régulière dénotant $L$ et qui renvoie une expression régulière dénotant le langage transformé.}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec pref arbre = 
+  match arbre with
+  |Vide -> Vide
+  |Eps -> Eps
+  |Feuille c -> Plus (Eps, Feuille c)
+  |Etoile f -> Fois (Etoile f, pref f)
+  |Plus (fg, fd) -> Plus (pref fg, pref fd)
+  |Fois (fg, fd) -> Plus (Fois (fg, pref fd), 
+                              pref fg);; 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec sans arbre x= 
+  match arbre with
+  |Vide -> Vide
+  |Eps -> Eps
+  |Feuille c -> if c = x then Vide else Feuille x
+  |Etoile f -> Etoile (sans f x)
+  |Plus (fg, fd) -> Plus (sans fg x, sans fd x)
+  |Fois (fg, fd) -> Fois (sans fg x, sans fd x);; 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec avec arbre x= 
+  match arbre with
+  |Vide -> Vide
+  |Eps -> Vide
+  |Feuille c -> if c = x then Feuille x else Vide
+  |Etoile f -> Fois (Fois (Etoile f, avec f x), 
+                        Etoile f)
+  |Plus (fg, fd) -> Plus (avec fg x, avec fd x)
+  |Fois (fg, fd) -> Plus (Fois (avec fg x, fd),
+                              Fois (fg, avec fd x));; 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec oter1 arbre x= 
+  match arbre with
+  |Vide -> Vide
+  |Eps -> Vide
+  |Feuille c -> if c = x then Eps else Vide
+  |Etoile f -> Fois (Fois (Etoile f, oter1 f x), 
+                        Etoile f)
+  |Plus (fg, fd) -> Plus (oter1 fg x, oter1 fd x)
+  |Fois (fg, fd) -> Plus (Fois (oter1 fg x, fd),
+                              Fois (fg, oter1 fd x));; 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let rec oterPrem arbre x= 
+  match arbre with
+  |Vide -> Vide
+  |Eps -> Vide
+  |Feuille c -> if c = x then Eps else Vide
+  |Etoile f -> Fois (Fois (Etoile (sans f x), 
+                                 oterPrem f x), 
+                        Etoile f)
+  |Plus (fg, fd) -> Plus (oterPrem fg x, oterPrem fd x)
+  |Fois (fg, fd) -> Plus (Fois (oterPrem fg x, fd),
+                              Fois (sans fg x, 
+                                       oterPrem fd x));; 
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Normalisations}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On reprend les théorèmes du cours
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+{\it Écrire une fonction \type{elim0 : arbreER -> arbreER} qui renvoie une expression régulière (sous forme d'un arbre) équivalente à celle passée en paramètre et qui est \type{Vide} ou un arbre ne contenant pas la feuille \type{Vide}.}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec elim0 arbre = 
+  match arbre with
+  |Feuille c -> Feuille c
+  |Vide -> Vide
+  |Eps -> Eps
+  |Etoile f -> if elim0 f = Vide
+                  then Eps
+                  else Etoile (elim0 f)
+  |Plus (fg, fd) -> begin match (elim0 fg), (elim0 fd) with
+                           |Vide, Vide -> Vide
+                           |Vide, f -> f
+                           |f, Vide -> f
+                           |fg, fd -> Plus(fg, fd) end
+  |Fois (fg, fd) -> begin match (elim0 fg), (elim0 fd) with
+                             |Vide, f -> Vide
+                             |f, Vide -> Vide
+                             |fg, fd -> Fois(fg, fd) end;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+{\it Écrire une fonction \type{elimination1 : arbreER -> arbreER} qui renvoie une expression régulière (sous forme d'un arbre) équivalente à celle passée en paramètre 
+
+et qui est soit \type{Vide}, soit \type{Eps}, soit \type{Plus (Eps, arbre)} soit \type{arbre} 
+
+où arbre ne contient ni la feuille \type{Vide} ni la feuille \type{Eps}.}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let elimination1 arbre = 
+  let rec aux arbre =
+    match arbre with
+    |Vide -> Vide
+    |Eps -> Eps
+    |Feuille c -> Feuille c
+    |Etoile f 
+      -> begin match aux f with
+               |Eps -> Eps
+               |Plus(Eps, f) -> Etoile f
+               |f -> Etoile f end
+    |Plus (fg, fd) 
+      -> begin match (aux fg), (aux fd) with
+               |Eps, Eps -> Eps
+               |Eps, Plus(Eps, f) -> Plus(Eps, f)
+               |Plus(Eps, f), Eps  -> Plus(Eps, f)
+               |Plus(Eps, f), Plus(Eps, g) 
+                 -> Plus(Eps, Plus (f,g))
+               |Plus(Eps, f), g -> Plus(Eps, Plus (f,g))
+               |f, Eps -> Plus(Eps, f)
+               |f, Plus(Eps, g) -> Plus(Eps, Plus (f,g))
+               |f, g -> Plus(f, g) end
+    |Fois (fg, fd) 
+      -> begin match (aux fg), (aux fd) with
+               |Eps, f -> f
+               |f, Eps -> f
+               |Plus(Eps, f), Plus(Eps, g) 
+                  -> Plus(Eps, Plus (Plus (f,g), Fois(f,g)))
+               |Plus(Eps, f), g -> Plus(g, Fois (f,g))
+               |f, Plus(Eps, g)-> Plus(f, Fois (f,g))
+               |f, g -> Fois(f, g) end
+  in aux (elim0 arbre);;
+\end{lstlisting}
+\newpage
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+
+

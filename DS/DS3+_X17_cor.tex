@@ -1,0 +1,469 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{DS3+ X-ENS 2017}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Jeu à un joueur, parcours en largeur}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+On peut lister les nombres qu'on peut atteindre avec une
+profondeur donnée : on simule en fait le parcours en largeur en ajoutant à chaque niveau les valeurs calculées à partir du niveau précédent qui n'ont pas encore été atteintes.
+\begin{itemize} 
+\item 0 : 1 
+\item 1 : 2 
+\item 2 : 3, 4 
+\item 3 : 5, 6, 8
+\item 4 : 7, 9, 10, 12, 16 
+\item 5 : 11, 13, 14, 17, 18, 20, 24, 32 
+\item 6 : 15, 19, 21, 22, 25, 26, 28, 33, 34, 36, 40, 48, 64 
+\item 7 : 23, 27, 29, 30, 35, 37, 38, 41, 42, 44, 49, 50,  \dots 
+\end{itemize} 
+
+On voit que 42 apparaît pour la première fois à la profondeur 7 avec la solution optimale 
+\begin{center}
+    \bf 1, 2, 4, 5, 10, 20, 21, 42
+\end{center} 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+\begin{description}
+\item[Invariant] On propose l'invariant ${\cal P}(p)$ suivant :
+
+lors du passage de la boucle \type{tant que} pour la valeur $p$, 
+
+\begin{itemize}
+  \item $A$ ne contient que des états accessibles,
+  \item ces états sont de profondeur au plus $p$,
+  \item $A$ contient tous les états de profondeur $p$.
+\end{itemize}
+\item[Démonstration de l'invariant]
+
+${\cal P}(0)$ est vraie car $A$ contient initialement $e_0$, seul état accessible de profondeur 0.
+
+Si la propriété ${\cal P}(p)$ est vérifiée et qu'aucun état de $A$ n'appartient à $F$ alors on place dans $B$ les voisins des états de $A$ :
+
+\begin{itemize}
+  \item ces voisins d'états accessibles sont donc accessibles,
+  \item ils sont voisins d'états de profondeur $p$ au plus sont de profondeur $p+1$ au plus,
+  \item tout état $s$ de profondeur $p+1$ est le voisin d'un état $s'$ de profondeur $p$, or $s'$ appartient à $A$ donc $s$ appartient à $B$.
+\end{itemize}
+
+Après avoir remplacé $p$ par $p+1$ et $A$ par $B$ on voit donc que ${\cal P}(p+1)$ est vérifiée.
+
+On a donc prouvé par récurrence que ${\cal P}(p)$ est vérifiée pour tout $p$ qui correspond à un passage de la boucle \type{tant que}.
+\newpage
+\item[Preuve]
+Ainsi, si le parcours renvoie VRAI, c'est qu'on a trouvé un état accessible dans $F$ donc qu'il existe solution.
+S'il existe une solution, il en existe une qui est optimale.
+
+Inversement s'il existe une solution (optimale) alors il existe un état $t$ accessible dans $F$.
+
+Si $t$ est à la profondeur $p_0$, il sera découvert lors du passage pour la valeur $p_0$ pour $p$, sauf si un autre sommet accessible a été découvert auparavant. Dans les deux cas l'algorithme renvoie VRAI.
+\end{description}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+On note $A_p$ l'ensemble $A$ lors du passage de la boucle pour la valeur $p$.
+\begin{description}
+\item[Complexité spatiale] 
+Chaque élément de $A_p$ admet deux voisins donc la taille de $A_{p+1}$ est au plus le double de celle de $A_p$ : $|A_{p+1}| \le 2|A_p|$. On en déduit $A_p\le 2^p$.
+
+On a $B = B_1 \cup B_2$ avec $B_1=\{x+1\ ; x\in A\}$ et $B_2 =\{2x\ ; x\in A\}$.
+
+$B_1$ et $B_2$ on le même cardinal que $A_p$ et sont formés chacun d'éléments distincts.
+
+Touts les éléments de $B_2$ sont pairs donc la moitié, au moins, des éléments de $B$ sont pairs.
+
+Ainsi la moitié, au moins, des éléments de $A_{p+1}$ sont pairs pour tout $p$.
+
+Les élément pairs de $A_p$ vont donner dans $B_1$ des éléments impairs qui seront donc distincts des éléments de $B_2$ : on en déduit qu'on a $\displaystyle |A_{p+1}|\ge \frac{|A_p|}2 + |A_p|$ pour $p\ge 1$. Comme on a $|A_1|=2\ge \frac 32$ on en déduit $|A_p| \ge \bigl(\frac 32\bigr)^p$.
+
+Ainsi la complexité spatiale lors du passage pour $p$, qui est la somme des taille de $A$ et de $B$, $|A_p| + |A_{p+1}|$, est encadrée par deux exponentielles :
+\[\left(\frac 32\right)^p \le \left(\frac 32\right)^p+\left(\frac 32\right)^{p+1} \le |A_p| + |A_{p+1}|
+\le 2^p + 2^{p+1} \le 2^{p+2}\]
+\item[Complexité temporelle] 
+La complexité temporelle d'une étape est minorée par la taille de $B$ car il faut au moins une instruction par élément ajouté.
+
+Pour chaque $x$ de $A$ on fait un nombre fini d'opération élémentaires puis on ajoute chacun des deux voisins : pour effectuer une union il faut, au pire tester tous les éléments de $B$ pour ne pas ajouter de doublon donc on effectue au plus $a_p(C + 2 a_{p+1})$ instructions.
+
+La complexité temporelle $C(p)$ est donc encadrée
+\[ \left(\frac 32\right)^p \le |A_{p+1}| \le \sum_{k=0}^p |B_p|\le C(p) \]
+\[C(p) \le \sum_{k=0}^p a_p(C + 2 a_{p+1}) \le \sum_{k=0}^p 2^{k+2}(C + 2.2^{k+3})\le C2^{p+3}+2^{2p+6} \le C'.4^p\]
+\end{description}
+Les deux complexités sont bien encadrées par des exponentielles.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+\begin{lstlisting}
+let bfs () = 
+  let rec successeurs A B p = 
+    match A with 
+    |[] -> successeurs B [] (p+1) 
+    |(t::q) -> if final t 
+               then p 
+               else successeurs q ((suivants t) @ B) p
+    in successeurs [initial] [] 0 ;; 
+\end{lstlisting}
+La fonction \type{successeurs} prend en entrée l'état des variables \type{A}, \type{B}
+et \type{p} décrites dans le sujet, et renvoie la solution. Le cas \type{A = []}
+correspond à la fin de la boucle {\bf pour tout}. 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+On a montré à la question 2 que si l'algorithme termine en renvoyant VRAI au passage pour la valeur $p$ alors l'état appartenant à $F$ considéré est à la profondeur $p$ au plus.
+
+Il ne peut pas être à une profondeur $k<p$ car sinon il était dans l'ensemble $A_k$ lors du passage pour la valeur $k$ et l'algorithme aurait terminé lors de ce passage. 
+
+Ainsi la valeur renvoyée est la profondeur d'une solution.
+
+Si ce n'était pas la profondeur d'une solution optimale alors un état correspondant à une solution optimale aurait appartenu à $A$ lors d'une valeur antérieure de $p$ ce qui aurait fait terminer l'algorithme plus tôt: c'est impossible.
+
+L'algorithme renvoie la profondeur d'une solution optimale.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Parcours en profondeur}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[label=exo:dfs]
+\begin{description}
+\item[Sens direct] 
+Supposons qu'il existe une solution de profondeur inférieure ou égale à $m$ : $(e_0,\dots,e_p)$.
+
+$e_p$ est gagnant donc $\text{DFS}(m,e_{p},p)$ renvoie VRAI.
+
+$e_p$ est un voisin de $e_{p-1}$ donc $\text{DFS}(m,e_{p-1},p-1)$ va renvoyer VRAI, car au moins un de ses suivants, $e_p$ ou un autre élément de $F$, sera tel que 
+
+On prouve ainsi, par récurrence descendante, que $\text{DFS}(m,e_k,k)$ renvoie VRAI pour tout $k\in \{0, \ldots, p\}$ donc, en particulier, $\text{DFS}(m,e_0,0)$ renvoie VRAI.
+
+\item[Réciproque] 
+
+Si $\text{DFS}(m,e_0,0)$ renvoie VRAI alors  soit $e_0$ est gagnant, 
+
+soit il existe un état $e_1$ suivant de $e_1$ tel que $\text{DFS}(m,e_1,1)$ renvoie VRAI.
+
+Tant qu'on n'a pas trouvé un état gagnant, on construit ainsi des états $e_k$ tels que $\text{DFS}(m,e_k,k)$ renvoie VRAI et $e_k\in s(e_{k-1})$.
+
+La séquence doit s'arrêter car, si on parvient à $e_m$, $\text{DFS}(m,e_m,m)$ renvoie VRAI seulement si $e_m$ est gagnant. Il existe donc une solution de profondeur $m$ au plus.
+\end{description}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+\begin{description}
+\item[Test d'une liste] 
+
+On commence par une fonction de test d'une fonction booléenne sur une liste qui renvoie \type{true} si et seulement si il existe au moins un élément de la liste qui vérifie la condition.
+%-------------------------------------------------------------------------------
+\begin{lstlisting} 
+let rec tester f liste = 
+  match liste with
+  |[] -> false
+  |t::q -> (f t) || (tester f q);;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+Cette fonction existe : \type{List.exists}.
+%-------------------------------------------------------------------------------
+\item[Parcours limité]
+On suit alors l'algorithme proposé
+%-------------------------------------------------------------------------------
+\begin{lstlisting} 
+let rec dfs m e p = 
+  if p > m
+  then false
+  else if final e
+       then true
+       else tester (fun x -> dfs m x (p+1)) (suivants e);; 
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+\item[Recherche du niveau]
+Pour trouver la profondeur minimale on teste par valeur de $m$ croissante
+%-------------------------------------------------------------------------------
+\begin{lstlisting} 
+let ids () =
+  let rec aux m =
+    if dfs m initial 0
+    then m
+    else aux (m+1) in
+  aux 0;;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+\end{description}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Si une solution existe on note $m$ la profondeur optimale d'une solution.
+
+L'algorithme \type{ids} va tester \type{dfs k initial 0} pour $k<m$ qui renvoie Faux d'après la question \ref{exo:dfs}
+
+On teste ensuite \type{dfs m initial 0} , la question \ref{exo:dfs} indique que la fonction \type{dfs} renvoie VRAI donc \type{ids} renverra $m$ : la valeur trouvée est donc bien optimale. 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+\begin{description}
+\item[Un état à chaque profondeur] 
+
+Quand il y a exactement un état à chaque profondeur $p$, le
+parcours en largeur n'aura qu'un élément dans $A$ (et dans $B$) à chaque
+passage, donc une complexité spatiale en ${\cal O}(1)$. Si on note $m$ la
+profondeur optimale, le calcul de $B$ (et de $A$) se fait en temps
+${\cal O}(m)$. 
+\smallskip
+Le parcours en profondeur n'utilise aussi que des liste de taille 1. Cependant il faut ajouter la pile des appels récursif, en ${\cal O}(m)$. 
+
+On explore aux profondeurs $1$, puis $2$, puis etc. jusqu'à arriver à $m$. 
+
+Chaque exploration demande un temps linéaire en la profondeur souhaitée, soit
+une complexité totale en ${\cal O}\bigl(m^2\bigr)$.
+%-------------------------------------------------------------------------------
+\medskip
+%-------------------------------------------------------------------------------
+\item[$2^p$ états à la profondeur $p$]
+
+S'il y a exactement $2^p$ états à la profondeur $p$, le parcours
+en largeur aura besoin de stocker les $2^p$ à chaque étape, soit une complexité spatiale en
+${\cal O}\bigl(2^m\bigr)$ pour la dernière étape. 
+
+Le temps de calcul sera également un ${\cal O}\bigl(2^m\bigr)$.
+\smallskip
+Le parcours en profondeur n'utilisera lui que la taille de sa pile d'appels, en ${\cal O}(m)$. 
+
+Le temps de calcul sera ici aussi un ${\cal O}\bigl(2^m\bigr)$.
+\end{description}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Parcours en profondeur avec horizon}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+Pour initialiser un minimum, on lui donne une valeur infinie, c'est-à-dire \type{let mini = ref max\_int} pour les entiers. Comme il n'y a pas de \type{return} en Caml, on l=peut le remplacer par une erreur que l'on rattraperait ou, ici, utiliser la condition de sortie de la boucle.
+%-------------------------------------------------------------------------------
+\begin{lstlisting} 
+let idastar () = 
+   (* Initialisation de min *)
+   let mini = ref max\_int in
+   (* La fonction DFS* *)
+   let rec dfsstar m e p = 
+      let c = p + (h e) in
+      if c > m 
+      then begin if c < !mini 
+                 then mini := c; 
+                 false end
+      else begin if final e 
+                 then true
+                 else tester (fun x-> dfsstar m x (p+1)) 
+                             (suivants e) end           in
+   (* On suit l'énoncé, en incluant une réponse entière *)
+   let m = ref (h initial) in
+   let reponse = ref (-1) in
+   while !m < max_int do
+      mini := max_int;
+      if dfsstar !m initial 0
+      then begin reponse := !m;
+                 m := max_int end
+      else m := !mini done;
+   !reponse;; 
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage 
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+Pour le jeu (1), un état $q$ accessible à partir de $p$ par un chemin de longueur $k$ vérifie $q\le 2^k.p$. 
+
+Pour tout $p$ il existe un entier $k$ tel que $2^{k-1}.p < t \le 2^k.p$ où $t$ est l'objectif : il faut au moins jouer encore $k$ coups à partir de $p$ avant de trouver une solution. 
+
+$h$ : $p \mapsto \lceil \text{log}_2(t/p)\rceil$ est donc une fonction admissible.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+\begin{description}
+\item[Preuve de DFS*] 
+Si $(e_0,\dots,e_p)$ est une solution avec $p \le m$.
+
+Pour tout $k$ on doit avoir $h(e_k) \le p-k$ car la distance de $e_k$ à $F$ est au plus $p-k$.
+
+On a alors $e_p\in F$ et $p + h(e_p) = p \le m$ donc $\text{DFS*}(m,e_p,p)$ renvoie VRAI.
+
+$p-1 + h(e_{p-1}) \le p-1+1 \le m$ et $e_p$ est un voisin de $e_{p-1}$ donc $\text{DFS*}(m,e_{p-1},p-1)$ renvoie VRAI.
+
+On prouve ainsi, par récurrence descendante, que $\text{DFS*}(m,e_k,k)$ renvoie VRAI pour tout $k\in \{0, \ldots, p\}$ donc, en particulier, $\text{DFS*}(m,e_0,0)$ renvoie VRAI.
+
+\smallskip  
+
+La réciproque se démontre comme dans l'exercice \ref{exo:dfs}.
+
+\item[Preuve de \type{idastar}]
+
+Une solution doit avoir une profondeur au moins $h(e_0)$ : c'est la première tentative faite.
+
+Si $\text{DFS*}(m,e_0,0)$ a renvoyé FAUX alors, lors du calcul on a ramené $min$ à la plus petite valeur pour laquelle il pourrait exister une solution ayant cette profondeur. Cela démontre qu'il n'y a pas de solution de profondeur $k < min$.
+
+On essaye alors avec $\text{DFS*}(min,e_0,0)$.
+
+Dès que $\text{DFS*}(m,e_0,0)$ renvoie VRAI, $m$ est bien la profondeur optimale.
+\end{description}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Application au jeu de taquin}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+Chaque état est une permutation des 16 éléments (case vide comprise) de l'état final : il y en a donc $16!$. Un entier de $\{0, 1 , 2, \ldots, 15\}$ est représentable avec 4 bits donc chaque état est représentable avec 64 bits, 8 octets. L'ensemble des états demandera donc $16!.8$ octets. Comme on a $16! > \bigl(\frac{16}e\bigr)^{16} > 5^{16}$, l'ensemble des états demande
+plus de $8.5^{16}> 10^{12}$ octets. 
+
+Chaque état admet au moins deux voisins donc, à la profondeur 49, on a un ensemble de voisins atteints de l'ordre de $2^{49}$, qui est supérieur à $16!$. La taille ci-dessus est un ordre de grandeur atteint par la liste $A$.
+
+On atteint une taille supérieure à un téra-octet, non réaliste.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+Dans l’état final, l’entier $k\in \{0, 1, \ldots, 14\}$ se trouve à la ligne \type{k/4} et à la colonne \type{k mod 4}. Chaque mouvement modifie soit la ligne soit la colonne d’une unité donc le nombre d'étapes pour remettre en place l'entier $k$ est au moins $|e_k^i- k/4| + |e_k^j - (k \text{mod} 4)|$.
+
+Ainsi $h(e)$  minore le nombre de coups à jouer à partir de $e$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+On modifie la valeur de \type{h} en ajoutant la valeur pour la nouvelle position \type{(li, lj)} et en enlevant la valeur pour l'ancienne position \type{(i, j)} devenue vide.
+\begin{lstlisting} 
+let move i j =
+  let k = grid.(i).(j) in
+  grid.(!li).(!lj) <- k;
+  h := !h - abs (i - k/4) - abs (j - k mod 4) 
+          + abs (!li - k/4) + abs (!lj - k mod 4);
+  li := i; 
+  lj := j;;
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+On a besoin de tester si une direction est possible ; on peut factoriser ce test.
+
+Lors de la définition de la fonction la variable globale \type{reponse} doit exister : on doit donner une définition {\bf avant} les fonctions.
+\begin{lstlisting} 
+let solution = ref[];;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+On devra ré-initialiser cette variable avant chaque appel de la fonction finale. Si on la définit dans la fonction elle devient locale alors que les fonctions appelées utilisent une fonction globale.
+%-------------------------------------------------------------------------------
+\begin{lstlisting} 
+let tente_gauche () =
+  if !lj < 3 && (List.hd !solution) <> Droite
+  then begin
+         gauche (); 
+         solution := Gauche::!solution; 
+         true
+       end
+  else false ;;
+  \end{lstlisting} 
+%-------------------------------------------------------------------------------
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+La position finale est reconnue par le fait que la valeur de \type{!h} est zero.
+
+Il ne faut pas oublier de revenir à la position initiale si un mouvement était possible mais n'aboutit pas ; on écrit donc une fonction d'annulation.
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let annule ()
+   match List.hd !solution with
+   |Gauche -> droite ()
+   |Droite -> gauche ()
+   |Haut -> bas ()
+   |Bas -> haut ();
+   solution := List.tl !solution;;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+Comme on n'a pas de liste de voisins, il faut tester les 4 mouvements. Cela occasionne deux tests : 
+
+"{\it le mouvement est-il possible ?} et, s'il l'est, "{\it que renvoie dfs ?}". Pour ne pas répéter les conditionnelles, on utilise la fonction \type{tester} qui porte sur les 4 fonctions \type{tente\_dir}.
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let tests = [tente_gauche;tente_droite;tente_bas;tente_haut];;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+La fonction qui sera testée dépend des fonctions de la liste ci-dessus.
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let mini = ref max_int;;
+let rec dfs m p =
+   let direction f =
+      if f()
+      then begin if dfs m p
+                 then true
+                 else (annule(); false) end
+      else false in
+  let c = p + ! h in
+  if c > m
+  then (if c < !mini 
+        then mini := c; 
+        false)
+  else if !h = 0
+       then true
+       else tester direction tests;;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise} 
+On commence par l'initialisation de \type{h} en fonction de la grille initiale.
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let h = ref 0;
+for i = 0 to 3 do
+  for j = 0 to 3 do
+    if i <> !li || j <> !lj
+    then let k = grid.(i).(j) in
+        h := !h + abs (i - (k/4)) + abs (j - (k mod 4)) done done;;
+\end{lstlisting} 
+%-------------------------------------------------------------------------------
+On peut alors écrire la fonction
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let taquin () = 
+   let m = ref !h in
+   let reponse = ref (-1) in
+   while !m <> max_int do
+      mini := max_int;
+      if dfs !m  0
+      then begin reponse := !m;
+                 m := max_int end
+      else m := !mini done;
+   List.rev !solution;; 
+      
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------

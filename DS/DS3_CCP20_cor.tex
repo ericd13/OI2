@@ -1,0 +1,216 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{DS3 CCINP 2020}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\setcounter{Exercise}9
+Les questions posées sont beaucoup plus facilement résolues en Python grâce à la structure hybride des listes python : on les construit par adjonction, comme les listes OCaml mais on les lit séquentiellement, comme les tableaux Caml.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Pierre peut connaître immédiatement $x$ et et $y$ si et seulement si $\Pi$ est le produit de deux nombres premiers distincts.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On a la majoration $x+y = S\le n$. On en déduit $P = x.y \le x.(n-x)=\frac{n^2}4 - \bigl(x-\frac n2\bigr)^2\le \frac{n^2}4$. Quand on cherchera un nombre de produits on pourra classer les produits comme les indices d'un tableau de taille $\left\lfloor\frac{n^2}4\right\rfloor+1$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+% Si on a $2\le x <y$  et $x+y \le n$ alors $y\le n-2$ et $x\le n-3$ d'où $x.y< n^2$.
+% \begin{lstlisting}
+% let coupleProd n = 
+%   let prods = Array.make (n*n) 0 in
+%   for x = 2 to (n-1) do
+%       for y = (x+1) to (n - x) do
+%           let p = x*y in prods.(p) <- prods.(p) +1 done done;
+%   let listeP = ref [] in
+%   for p = 0 to (n*n-1) do
+%       if prods.(p) > 1 then listeP := p :: !listeP done;
+%   List.rev !listeP;;
+% \end{lstlisting}
+% On retourne la liste pour qu'elle soit dans l'ordre croissant.
+\begin{lstlisting}[language=python]
+def CoupleProd(n):
+    m = (n**2)//4+1
+    nb_prods = [0]*m
+    for x in range(2, n):
+        for y in range(x+1, n-x+1):
+            p = x*y
+            nb_prods[p]  += 1
+    listeP = []
+    for p in range(m):
+        if nb_prods[p] > 1:
+            listeP.append(p)
+    return listeP
+\end{lstlisting}
+
+On peut simplifier les 5 dernières lignes en 
+\begin{lstlisting}[language=python]
+    return [p for p in range(m) if nb_prods[p] > 1]
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+On cherche les produits de la forme $x.(S-x)$ pour $x\ge 2$ et $x< S-x$ donc $x<\frac S2$.
+
+Or $x \mapsto x.(S-x)$ est strictement croissante sur $[-\infty ;\frac S2[$ donc les valeurs sont distinctes : on n'a pas besoin de tester les doublons. 
+
+Je n'ai pas compris l'utilité de la variable $n$, on suppose $S \le n$ donc $n$ ne sert pas.
+
+\newpage
+% \begin{lstlisting}
+% let prod s n =
+%   let rec aux x = 
+%       if 2*x >= s
+%       then []
+%       else x*(s-x) :: aux (x+1)
+%   in aux 2;;
+% \end{lstlisting}
+
+\begin{lstlisting}[language=python]
+def Prod(S, n):
+    prods = []
+    x = 2
+    while 2*x < S:
+        prods.append(x*(S-x))
+        x = x + 1
+    return prods
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+La valeur minimale d'une somme admissible est $S = 2 + 3$.
+% \begin{lstlisting}
+% let rec inclus l1 l 2 =
+%   match l1, l2 with
+%   |[], _ -> true
+%   |_, [] -> false
+%   |t1::q1, t2::q2 when t1 < t2 -> false
+%   |t1::q1, t2::q2 when t1 = t2 -> inclus q1 q2
+%   |t1::q1, t2::q2 -> inclus l1 q2;;
+   
+% let candidat_S n = 
+%   let listeP = coupleProd n in
+%   let rec aux s =
+%       if s > n 
+%       then []
+%       else begin
+%          if inclus (prod s n) listeP
+%          then s :: (aux (s+1))
+%          else aux (s+1) end
+%   in aux 5;;
+% \end{lstlisting}
+
+% On prend moins de précaution de complexité en Python
+\begin{lstlisting}[language=python]
+def inclus(liste1, liste2):
+    for x in liste1:
+        if not x in liste2:
+            return False
+    return True
+    
+def Candidat_S(n):
+    listeP = CoupleProd(n)
+    cand = []
+    for S in range(5, n+1):
+        if inclus(Prod(S, n), listeP):
+            cand.append(S)
+    return cand        
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+
+Je ne comprends pas bien l'énoncé, il semble en fait parler de Sophie plutôt que Pierre. Pour que Pierre puisse connaître $\Sigma$, il suffit que, parmi les sommes possibles associées au produit $\Pi$, il y en ait une seule appartenant à \type{Candidat\_S(n)}. La question est utile en fait pour Sophie, même s'il serait plus simple d'écrire une fonction \type{Unique\_P}. 
+
+% \begin{lstlisting}
+% let double_P n = 
+% let m = (n*n)/4 in
+%   let nb_prod = Array.make m 0 in 
+%   let compter1 = List.iter (fun k -> nb_prod.(k) <- nb_prod.(k) + 1) in
+%   List.iter (fun s -> compter1 (prod s n)) (candidat_s n);
+%   let out = ref [] in
+%   for i = 6 to (m-1) do
+%       if nb_prod.(i) <1 then out := i :: !out done;
+%   out;;
+% \end{lstlisting}
+
+On reprend le principe de la question \type{CoupleProd}.
+\begin{lstlisting}[language=python]
+def Double_p(n):
+    m = (n*n)//4+1
+    nb_prods = [0]*m
+    for S in Candidat_S(n):
+        for P in Prod(s, n):
+            nb_prods[P] += 1
+    return  [k for k in range(m) if np_prods[k] > 1]
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+On écrit ce qui est demandé bien que cela semble inutile
+
+On commence par calculer l'intersection.
+
+\begin{lstlisting}[language=python]
+def inter(liste1, liste2):
+    int = []
+    for x in liste1:
+        if x in liste2:
+            int.append(x)
+    return int
+\end{lstlisting}
+
+\newpage
+
+\begin{lstlisting}[language=python]
+def Reste_S(n):
+    reste = []
+    db = Double_P(n)
+    for S in Candidat_S(n):
+        int = inter(d, Prod(S, n))
+        if len(int) == 1:
+            reste.append(S)
+    return reste
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+\begin{lstlisting}[language=python]
+def Reste_P(S, n):
+    db = Double_P(n)
+    reste = []
+    for P in Prod(S, n):
+        if not(P in db):
+            reste.append(P)
+    return reste    
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}
+Il s'agit de la résolution d'une équation de degré 2 ; à quoi sert $n$ ?
+
+% \begin{lstlisting}
+% let solution p s n =
+%   let p1 = float_of_int p in
+%   let s1 = float_of_int s in
+%   let d = (s1*.s1 -. 4.0*.p1)**0.5 in
+%   (s1 +. d)/.2.0, (s1 -. d)/.2.0;;
+% \end{lstlisting}
+
+\begin{lstlisting}[language=python]
+def Solution(P, S, n):
+    d = (s**2 - 4*p)**0.5
+    return (s-d)/2, (s+d)/2
+\end{lstlisting}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------

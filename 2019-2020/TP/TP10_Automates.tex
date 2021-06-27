@@ -1,0 +1,427 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Automates}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\thispagestyle{empty}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Automates déterministes} 
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On choisit de représenter les automates déterministes complets par le type
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+type 'a afd = {indice : 'a -> int;
+               delta  : int array array;
+               finaux : bool array};;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{itemize}
+    \item \type{delta} est une matrice de taille $n\times p$.
+    \item \type{finaux} est un tableau de taille $n$.
+    \end{itemize}
+%-------------------------------------------------------------------------------
+
+\medskip
+
+Un enregistrement représente un automate $Q = ({\cal A}, S, \delta, s_0, F)$ avec
+%-------------------------------------------------------------------------------
+\begin{itemize}
+    \item ${\cal A}$ est défini par l'ensemble de départ de la fonction \type{indice} qui envoie bijectivement l'alphabet dans $\{0, 1, 2, \ldots, p-1\}$.
+    \item L'ensemble des états est $S = \{0, 1, 2, n-1\}$.
+    \item $\delta(s, x)$ est \type{delta.(s).(indice x)}
+    \item $s_0=0$
+    \item $F$ est l'ensemble des états $s$ tels que \type{finaux.(s)} vaut \type{false}.
+\end{itemize}
+%-------------------------------------------------------------------------------
+
+\medskip
+
+{\bf Nous utiliserons principalement des automates où les lettres sont des caractères.}
+
+On pourra utiliser comme exemple l'automate $Q_1$ défini par 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let indice1 x = 
+  match x with 
+  |'a' -> 0
+  |'b' -> 1
+  |_ -> failwith "Lettre bon valide";;
+
+let delta1 = [|[|1; 2|]; [|2; 4|]; [|4; 0|]; 
+               [|2; 4|]; [|2; 1|]|];;
+
+let q1 = {indice = indice1; delta = delta1; 
+          finaux = [|false; false; false; false; true|]};;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{figure}
+\centering
+\begin{tikzpicture}[baseline,
+                    accepting=accepting by gdouble, 
+                    initial text =,
+                    scale = 1.5,
+                    bend angle=15]
+\tikzset{sommet/.style = {anchor=base,circle, draw, minimum size = 20 pt, >=latex}}                
+\node[sommet,initial] (S0) at  (0,0) {0};
+\node[sommet] (S1) at  (2,2) {1};
+\node[sommet] (S2) at  (2,0) {2};
+\node[sommet] (S3) at  (4,0) {3};
+\node[sommet,accepting] (S4) at  (4,2) {4};
+\draw[->] (S0) edge             node[above left] {$a$} (S1);
+\draw[->] (S0) edge[bend left]  node[above]      {$b$} (S2);
+\draw[->] (S1) edge             node[left]       {$a$} (S2);
+\draw[->] (S1) edge[bend left]  node[above]      {$b$} (S4);
+\draw[->] (S2) edge[bend left]  node[below]      {$b$} (S0);
+\draw[->] (S2) edge[bend left]  node[above left] {$a$} (S4);
+\draw[->] (S3) edge             node[below]      {$a$} (S2);
+\draw[->] (S3) edge             node[right]      {$b$} (S4);
+\draw[->] (S4) edge[bend left]  node[below right]{$a$} (S2);
+\draw[->] (S4) edge[bend left]  node[below]      {$b$} (S1);
+\end{tikzpicture}
+\caption{L'automate $Q_1$}
+\end{figure}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction qui reçoit une chaîne de caractère et un automate et qui renvoie \type{true} ou \type{false} selon que la chaîne définit un mot reconnu par l'automate on non.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let reconnu mot aut =
+  let ind = aut.indice in
+  let d = aut.delta in
+  let f = aut.finaux in
+  let s = ref 0 in
+  let n = String.length mot in
+  for i = 0 to (n-1) do
+    s := d.(!s).(ind mot.[i]) done;
+  f.(!s);;
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+reconnu : string -> char afd -> bool
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+La longueur d'une chaîne est calculée par \type{String.length}.
+
+Le $k$-ième caractère est accessible par \type{ch.[k]} pour $0\le k < $\type{String.length ch}.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction qui calcule les états accessibles d'un automate sous la forme d'un tableau de booléens (de longueur $n$). Un état $s$ sera accessible si et seulement si la tableau vaut \type{true} en $s$.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let accessibles aut =
+  let d = aut.delta in
+  let n = Array.length d in
+  let p = Array.length d.(0) in
+  let acc = Array.make n false in
+  let rec aux s =
+    if not acc.(s)
+    then begin acc.(s) <- true;
+    for i = 0 to (p-1) do 
+      aux d.(s).(i) done end in
+  aux 0;
+  acc;;
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+accessibles : 'a afd -> bool array
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+En déduire une fonction qui émonde un automate.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let emonder aut =
+  let d = aut.delta in
+  let n = Array.length d in
+  let p = Array.length d.(0) in
+  let acc  = accessibles aut in
+  let a = Array.make n 0 in 
+  let b = Array.make n 0 in 
+  let q = ref 0 in
+  for i = 0 to (n-1) do
+    if acc.(i) 
+    then begin a.(i) <- !q; b.(!q) <- i; 
+              incr q end done;
+  let new_delta = Array.make !q [||] in
+  let new_finaux = Array.make !q false in
+  for i = 0 to (!q -1) do
+    new_delta.(i) <- Array.make p 0;
+    for j = 0 to (p-1) do 
+      new_delta.(i).(j) <- a.(d.(b.(i)).(j)) done;
+    new_finaux.(i) <- aut.finaux.(b.(i)) done;
+  {indice = aut.indice; delta = new_delta; 
+   finaux = new_finaux};;
+\end{lstlisting}
+\newpage
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+emonder : 'a afd -> 'a afd
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Automates non déterministes} 
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Les automates non déterministes sont représentés par la type
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+type 'a afnd = {n_indice : 'a -> int;
+                n_delta : int list array array;
+                n_initiaux : int list;
+                n_finaux : int list};;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{itemize}
+    \item \type{n\_delta} est une matrice de listes de taille $n\times p$.
+    \item \type{n\_initiaux} et \type{n\_finaux} sont des tableaux de taille $n$.
+    \item On supposera que les listes d'entiers sont {\bf triées par ordre croissant et sans doublon}.
+    \end{itemize}
+%-------------------------------------------------------------------------------
+
+\medskip
+
+Un enregistrement représente un automate $Q = ({\cal A}, S, \Delta, I, F)$ avec
+%-------------------------------------------------------------------------------
+\begin{itemize}
+    \item ${\cal A}$ est défini par l'ensemble de départ de la fonction \type{n\_indice} qui envoie bijectivement l'alphabet dans $\{0, 1, 2, \ldots, p-1\}$.
+    \item L'ensemble des états est $S = \{0, 1, 2, n-1\}$.
+    \item $\Delta(s, x)$ est l'ensemble représenté par la liste \type{n\_delta.(s).(indice x)}.
+    \item $I$ est l'ensemble représenté par la liste \type{n\_initiaux}.
+    \item $F$ est l'ensemble représenté par la liste \type{n\_finaux}.
+\end{itemize}
+%-------------------------------------------------------------------------------
+
+\newpage
+
+On pourra utiliser comme exemple l'automate $Q_2$ défini par 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+let delta2 = [|[|[0; 1]; [0]|]; [|[2]; [0]|]; [|[3]; [0]|]; 
+               [|[3]; [4]|]; [|[]; []|];|];;
+
+let q2 = {n_indice = indice1;
+          n_delta = delta2;
+          n_initiaux = [0];
+          n_finaux = [4]};;
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+\begin{figure}
+\centering
+\begin{tikzpicture}[baseline,
+                    accepting=accepting by gdouble, 
+                    initial text =,
+                    scale = 1.2,
+                    bend angle=15]
+\tikzset{sommet/.style = {anchor=base,circle, draw, minimum size = 20 pt, >=latex}}                
+\node[sommet,initial] (S0) at  (0,0) {0};
+\node[sommet] (S1) at  (2,0) {1};
+\node[sommet] (S2) at  (4,0) {2};
+\node[sommet] (S3) at  (6,0) {3};
+\node[sommet,accepting] (S4) at  (8, 0) {4};
+\draw[->] (S0) edge[loop above] node[above]      {$a$} (S0);
+\draw[->] (S0) edge[loop below] node[below]      {$b$} (S0);
+\draw[->] (S0) edge             node[above]      {$a$} (S1);
+\draw[->] (S1) edge             node[above]      {$a$} (S2);
+\draw[->] (S2) edge             node[above]      {$a$} (S3);
+\draw[->] (S3) edge             node[above]      {$b$} (S4);
+\end{tikzpicture}
+\caption{L'automate $Q_2$}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction qui fusionne deux listes triées par ordre croissant et sans doublon en une liste avec les mêmes caractéristiques.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec fusion l1 l2 = 
+  match l1, l2 with
+  |[], _ -> l2
+  |_, [] -> l1
+  |t1::q1, t2::q2 when t1 = t2 -> t1 :: (fusion q1 q2)
+  |t1::q1, t2::q2 when t1 < t2 -> t1 :: (fusion q1 l2)
+  |t1::q1, t2::q2 -> t2 :: (fusion l1 q2);;
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+fusion : 'a list -> 'a list -> 'a list
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction qui détermine si deux listes triées par ordre croissant et sans doublon ont une valeur commune.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec inter l1 l2 =
+  match l1, l2 with
+  |[], _ -> false
+  |_, [] -> false
+  |t1::q1, t2::q2 when t1 = t2 -> true
+  |t1::q1, t2::q2 when t1 < t2 -> inter q1 l2
+  |t1::q1, t2::q2 -> inter l1 q2;;
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+inter : 'a list -> 'a list -> bool 
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+En déduire une fonction qui reçoit une chaîne de caractère et un automate non déterministe et qui renvoie \type{true} ou \type{false} selon que la chaîne définit un mot reconnu par l'automate on non.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer} On commence par une fonction qui calcule l'image d'un ensemble.
+\begin{lstlisting}
+let rec delta_liste delta liste k =
+  match liste with
+  |[] -> []
+  |t::q -> fusion delta.(t).(k) (delta_liste delta q k);;
+\end{lstlisting}
+
+\begin{lstlisting}
+let n_reconnu mot aut =
+  let ind = aut.n_indice in
+  let d = aut.n_delta in
+  let f = aut.n_finaux in
+  let s = ref aut.n_initiaux in
+  let n = String.length mot in
+  for i = 0 to (n-1) do
+    s := delta_liste d !s (ind mot.[i]) done;
+  inter !s f;;
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+n_reconnu : string -> char afnd -> bool
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction 
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+reconnu : string -> char afd -> bool
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction 
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+reconnu : string -> char afd -> bool
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+La longueur d'une chaîne est calculée par \type{String.length}.
+
+Le $k$-ième caractère est accessible par \type{ch.[k]} pour $0\le k < $\type{String.length ch}.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+Écrire une fonction qui calcule les états accessibles d'un automate sous la forme d'un tableau de booléens (de longueur $n$). Un état $s$ sera accessible si et seulement si la tableau vaut \type{true} en $s$.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let accessibles aut =
+  let d = aut.delta in
+  let n = Array.length d in
+  let p = Array.length d.(0) in
+  let acc = Array.make n false in
+  let rec aux s =
+    if not acc.(s)
+    then begin acc.(s) <- true;
+    for i = 0 to (p-1) do 
+      aux d.(s).(i) done end in
+  aux 0;
+  acc;;
+\end{lstlisting}
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+accessibles : 'a afd -> bool array
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}\it 
+En déduire une fonction qui émonde un automate.
+\end{Exercise} 
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let emonder aut =
+  let d = aut.delta in
+  let n = Array.length d in
+  let p = Array.length d.(0) in
+  let acc  = accessibles aut in
+  let a = Array.make n 0 in 
+  let b = Array.make n 0 in 
+  let q = ref 0 in
+  for i = 0 to (n-1) do
+    if acc.(i) 
+    then begin a.(i) <- !q; b.(!q) <- i; 
+              incr q end done;
+  let new_delta = Array.make !q [||] in
+  let new_finaux = Array.make !q false in
+  for i = 0 to (!q -1) do
+    new_delta.(i) <- Array.make p 0;
+    for j = 0 to (p-1) do 
+      new_delta.(i).(j) <- a.(d.(b.(i)).(j)) done;
+    new_finaux.(i) <- aut.finaux.(b.(i)) done;
+  {indice = aut.indice; delta = new_delta; 
+   finaux = new_finaux};;
+\end{lstlisting}
+\newpage
+\end{Answer} 
+%-------------------------------------------------------------------------------
+\begin{lstlisting}
+emonder : 'a afd -> 'a afd
+\end{lstlisting}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+
+
+
+
+

@@ -1,0 +1,433 @@
+%-------------------------------------------------------------------------------
+\tikzset{fl/.style={ draw, fill = gray,rectangle,minimum size=3mm}}
+\tikzset{sub/.style={ draw, shape border rotate=90, isosceles triangle,minimum size=8mm,yshift=-8mm}}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Tas persistants}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\thispagestyle{empty}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{abstract}
+Dans le cours nous avons défini le type de tas qui a été implémenté à l'aide d'un tableau. On a ainsi utilisé une structure de données itératives, c'est-à-dire non persistante.
+
+Nous allons dans ce travail utiliser le type récursif d'arbre croissant et y définir les fonctions des files de priorité.
+\end{abstract}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Cas général}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On veut implémenter le type de données abstraite de file de priorité. On manipule des ensembles de couples {\it clé$\times$valeur} où la clé est un entier et la valeur est de type $\alpha$ (\type{'a}).
+
+On a donc besoin d'un type \type{'a pQueue} avec les fonctions
+\begin{enumerate}
+\item \type{createPQ : 'a -> 'a pQueue},
+\item \type{isEmptyPQ : 'a pQueue -> bool},
+\item l'ajout est \type{add : 'a pQueue -> 'a -> int -> 'a pQueue}, 
+
+ on crée un nouvel objet
+\item \type{next : 'a pQueue -> 'a * int} ,
+
+permet de voir l'élément de priorité minimale (de clé minimale) et sa priorité,
+\item le retrait de l'élément prioritaire est \type{remove : 'a pQueue -> 'a pQueue}.
+\end{enumerate}
+
+\medskip
+
+
+Pour simplifier l'étude on ne manipulera ici que des données vides, le couple sera réduit à sa clé.
+
+Le type sera simplement 
+\begin{lstlisting}
+type pQueue = Vide|Noeud of pQueue*int*pQueue
+\end{lstlisting}
+
+On devra maintenir la condition de croissance : les valeurs des fils sont supérieures à la valeur du père.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Premières fonctions]\it 
+
+Écrire les fonctions \type{createPQ}, \type{isEmptyPQ} et \type{next}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let createPQ () = Vide;;
+
+let isEmptyPQ tas = tas = Vide;;
+
+let next tas =
+  match tas with
+  |Vide -> failwith "Le tas est vide"
+  |Noeud(_, n, _) -> n;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+On suppose donnée une fonction \type{fusion pQueue -> pQueue -> pQueue} qui calcule un nouveau tas à partir de deux tas en conservant les éléments.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Dernières fonctions]\it 
+Écrire les fonctions \type{add} et \type{remove}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let add tas n = fusion tas (Noeud(Vide, n, Vide));;
+
+let remove tas =
+  match tas with
+  |Vide -> failwith "Le tas est vide"
+  |Noeud(g, _, d) -> fusion g d;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Tas auto-équilibrants}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+Pour la fusion, le cas où un des tas est vide est évident et, sinon, la racine doit être la plus petite des deux racines. Il reste alors 3 arbres :
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+    \item les deux fils de l'arbre de racine minimale,
+    \item l'autre arbre.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+On en choisit deux que l'on fusionne et on reconstitue un arbre.
+
+\medskip
+
+Les tas {\bf maxiphobiques}\footnote{ qui n'aiment pas les gros} choisissent de fusionner les deux arbres de tailles minimales. Pour les définir, on change le type pour qu'il contienne la taille de l'arbre. On prouve alors que la complexité de la fusion est logarithmique par rapport à la taille.
+
+\medskip
+
+En 1986, Sleator et Tarjan ont proposé de considérer les deux fils d'un arbre comme une sorte de file d'attente : dans la situation décrite ci-dessus, le fils gauche est associé à l'autre tas et le fils droit devient un fils gauche
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Fusion]\it 
+Écrire La fonction fusion correspondante.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec fusion tas1 tas2 =
+  match tas1, tas2 with
+  |Vide, _ -> tas2
+  |_, Vide -> tas1
+  |Noeud(g1, n1, d1), Noeud(g2, n2, d2) 
+       -> if n1 < n2
+          then Noeud(d1, n1, fusion g1 tas2)
+          else Noeud(d2, n2, fusion g2 tas1);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+\medskip
+
+La complexité est alors difficile à calculer, en fait on ne peut pas assurer une complexité logarithmique à chaque opération. Cependant on peut assurer une complexité amortie logarithmique.
+
+La complexité amortie se calcule en calculant la moyenne des complexités pour une suite d'opérations.
+
+On compte la complexité de \type{fusion} en nombre d'appels récursifs à cette fonction \type{fusion}.
+
+Dans le cas des tas auto-équilibrants on sépare les nœuds en 2 catégories :
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+    \item les nœuds lourds ont le fils gauche de taille strictement supérieure à celle du fils droit,
+    \item les nœuds légers ont le fils droit de taille supérieure à celle du fils gauche.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+Pour calculer la complexité amortie on va donner, à chaque appel initial à la fonction \type{fusion}, un certain nombre de "{\it crédits de complexité}" qui ne sont pas forcément dépensés lors de la fonction. De fait, chaque nœud lourd devra être muni d'un crédit à dépenser.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Cas des nœuds lourds]\it 
+Montrer que si le nœud de taille minimale est lourd, le résultat d'une fusion est un nœud léger.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Si $|g1| > |d1|$ alors la taille de \type{fusion g1 tas2} est de taille supérieure à celle de $d1$ donc de celle de $g_1$ d'où \type{Noeud(d1, n1, fusion g1 tas2)} est léger.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+
+Ainsi l'étape de fusion avec décomposition d'un nœud lourd utilise le crédit du nœud. Il faut donc suffisamment de crédit pour la fusion qui décomposent un nœud léger. Il faut, dans ce cas, 2 crédits :
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+    \item un pour payer la fusion,
+    \item un autre pour munir le nœud construit, qui peut être lourd.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Nombre de fusions avec nœuds légers]\it 
+Montrer que le nombre de fusions qui décomposent un nœud léger lors de l'appel de fusion à deux tas de tailles respectives $n_1$ et $n_2$ est au plus $\log_2(n_1) + \log_2(n_2) + 2$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Dans le cas où \type{t = Noeud(g1, x, d)} est léger alors $|g_1| \le \frac 12|t|$. Ainsi, lors de chaque fusion la taille d'une partie diminue d'un facteur 2. Cela ne peut se produire que $\log_2(n_1) + 1 + \log_2(n_2) + 1$ fois.
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Crédits à fournir]\it 
+En déduire qu'il suffit de créditer chaque appel initial à la fonction \type{fusion} de $4\bigl(\log_2(n) + 1\bigr)$ crédits pour que la fusion soit toujours possible ; $n$ est la somme des taille des arbres à fusionner.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+$\log_2(n_1) \le \log_2(n_1+n2) = \log_2(n)$
+\end{Answer}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Calcul des nombres de {\sc Hamming}}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Les nombres de {\sc Hamming} sont les entiers qui n'admettent que 2, 3 et 5 comme diviseurs premiers, ce sont les entiers de l forme $n = 2^a.3^b.5^c$.
+
+On remarque que si $x$ est un nombre de {\sc Hamming} alors $2x,3x,5x$ le sont aussi, et que tous les nombres de {\sc Hamming} à part $1$ s'obtiennent en multipliant par $2$ ou $3$ ou $5$ un nombre de {\sc Hamming} plus petit.
+
+Pour obtenir les nombres de Hamming successifs, on peut
+%--------------------------------------------------------------------------
+\begin{enumerate}
+\item Initialiser une file de priorité avec le nombre 1, 
+\item répéter $n$ fois :
+extraire le premier élément de la file, $x$ et insérer $2x$, $3x$ et $5x$ dans la file.
+\end{enumerate}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}
+{\it Programmer cet algorithme pour calculer le 1000-ième nombre de Hamming}
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec hamming n =
+  let rec aux n file =
+    match n with
+    |1 -> next file
+    |n -> let p = next file in
+          aux (n-1) (add (add (add (remove file) (2*p)) (3*p)) (5*p))
+  in aux n (add (createPQ()) 1);;  
+\end{lstlisting}
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}
+{\it Normalement le 1000-ième nombre de Hamming est $51\,200\,000$, mais ce n'est pas ce que l'on a trouvé. En effet les éléments sont insérés plusieurs fois. Comment l'éviter ?}
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}$x$ est un nombre de {\sc Hamming} extrait de la file.
+
+Si $x$ est divisible par $5$, $x=5y$, alors $2x = 5.2y$ a été inséré auparavant car $2y < x$.
+
+De même $3x = 5.3y$ est aussi présent. Il est donc inutile d'insérer ces nombres, seul $5x$ est nouveau. 
+
+Lorsque $x$ n'est pas divisible par $5$ mais l'est par $3$ alors un raisonnement analogue montrer qu'il est inutile d'insérer $2x$.
+
+\begin{lstlisting}
+let rec hamming n =
+  let rec aux n file =
+    match n with
+    |1 -> next file
+    |n -> let p = next file in
+          if p mod 5 = 0 
+          then aux (n-1) (add (remove file) (5*p))
+          else if p mod 3 = 0
+               then aux (n-1) (add (add (remove file) (3*p)) (5*p))
+               else aux (n-1) (add (add (add (remove file) (2*p)) (3*p)) (5*p))
+  in aux n (add (createPQ()) 1);;
+\end{lstlisting}
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\section{Nombres taupins} 
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+Dans les temps anciens, chaque taupin avait un numéro secret, son {\bf nombre taupin}.
+
+Les premiers étudiants avaient le numéro 1.
+
+Pour les étudiants suivant le nombre était attribué par le parrain.
+\begin{itemize}
+    \item Si le parrain, de numéro $n$, est carré il attribue le numéro $2n$ à son filleul.
+    \item Si le parrain est cube (de numéro $n$) il attribue le numéro $3n - 1$ à son filleul : un cube sait faire 2 opérations à la fois.
+\end{itemize}
+
+On peut remarquer que tous les entiers ne sont pas attribués : par exemple 7 ne peut pas être de la forme $2n$ ni de la forme $3n - 1$.
+
+La question se pose de savoir si un entier est un nombre taupin possible : par exemple 1000 est obtenu par la suite
+$1 \rightarrow 2 \rightarrow 5 \rightarrow 14 \rightarrow 28 \rightarrow 56 \rightarrow 167  \rightarrow 500  \rightarrow 1000$.
+
+
+On peut remarquer que toutes les suites commencent par $1\rightarrow 2$.
+
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title=Test de taupinalité]
+Écrire une fonction \type{est\_taupin(n)} qui renvoie \type{true} ou \type{false} selon que $n$ est ou non un nombre taupin.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec est_taupin n =
+  if n <= 2
+  then true
+  else begin
+    if n mod 2 = 0
+    then begin
+      if n mod 3 = 2 
+      then est_taupin (n/2) || est_taupin ((n+1)/3)
+      else est_taupin (n/2) end
+    else begin
+      if n mod 3 = 2
+      then est_taupin ((n+1)/3)
+      else false end end;;           
+\end{lstlisting}
+\newpage
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\medskip
+On aurait aimé pouvoir suivre la généalogie d'un nombre taupin, en calculant le nombre taupin du parrain. malheureusement il peut exister des nombres qui sont obtenus de plusieurs manières. Par exemple
+
+$1 \rightarrow 2 \rightarrow 4 \rightarrow 8 \rightarrow 16 \rightarrow 32$ et
+$1 \rightarrow 2 \rightarrow 4 \rightarrow 11 \rightarrow 32$.
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title=Nombre de filières]
+Écrire une fonction \type{filieres n} qui renvoie le nombre de manières (qui peut être 0) d'obtenir $k$ à partir de $2$ avec les transformations $k \mapsto 2k$ et $k \mapsto 3k-1$ pour tout $k$ compris entre 0 et $n$.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec filieres n =
+  if n <= 2
+  then 1
+  else begin
+    if n mod 2 = 0
+    then begin
+      if n mod 3 = 2 
+      then filieres (n/2) + filieres ((n+1)/3)
+      else filieres (n/2) 
+      end
+    else begin
+      if n mod 3 = 2
+      then filieres ((n+1)/3)
+      else 0
+      end
+    end;;           
+\end{lstlisting}
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title=3 filières]
+Déterminer le premier nombre taupin qui peut peut l'être avec 3 chemins.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let n = ref 1;;
+while filieres !n < 4 do n := !n + 1 done;;
+print_int !n;;
+\end{lstlisting}
+
+On trouve 20480
+\end{Answer}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\begin{Exercise}[title=4 filières]
+Déterminer le premier nombre taupin qui peut peut l'être avec 4 chemins.
+\end{Exercise}
+%--------------------------------------------------------------------------
+\begin{Answer}
+Ici le calcul est long, 30 minutes. On peut accélérer en employant une file de priorité.
+\begin{lstlisting}
+let k_filieres k = 
+  let rec aux nb n file =
+    if nb = k
+    then n
+    else begin
+      let n1 = next file in
+      let new_f = add (add (remove file) (2*n1)) (3*n1 - 1) in
+      if n1 = n
+      then aux (nb + 1) n new_f
+      else aux 1 n1 new_f end
+  in aux 1 1 (add (createPQ()) 2);;
+  \end{lstlisting}
+
+On trouve $3\,988\,094\,144$ mais il faut 7 minutes !
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+% %-------------------------------------------------------------------------------
+% %-------------------------------------------------------------------------------
+% %-------------------------------------------------------------------------------
+% \section{Tas maxiphobiques}
+% %-------------------------------------------------------------------------------
+% %-------------------------------------------------------------------------------
+% %-------------------------------------------------------------------------------
+% maxi-phobique : qui n'aime pas les gros.
+
+% On choisit d'assembler les deux arbres de taille minimale parmi les 3 arbres.
+
+% On ne calcule pas la taille à chaque appel, la complexité deviendrait en ${\cal O}(n)$ pour chaque opération. On introduit la taille dans le type.
+% \begin{lstlisting}
+% type pQueue = Vide|Noeud of int*pQueue*int*pQueue
+% \end{lstlisting}
+% La taille est le premier entier.
+% %-------------------------------------------------------------------------------
+% %-------------------------------------------------------------------------------
+% \begin{Exercise}[title = Gestion de la taille]\it 
+% Écrire une fonction \type{taille : pQueue -> int} et une fonction 
+% \begin{lstlisting}
+% ordre pQueue -> pQueue -> pQueue ->  pQueue*pQueue*pQueue
+% \end{lstlisting}
+% qui prend en paramètres 3 tas et qui renvoie le triplet de ceux-ci dans l'ordre de taille.
+
+% \end{Exercise}
+% %-------------------------------------------------------------------------------
+% \begin{Answer}
+% \begin{lstlisting}
+% let taille tas =
+%   match tas with
+%   |Vide -> 0
+%   |Noeud(n, _, _, _) -> n;;
+% \end{lstlisting}
+
+% \begin{lstlisting}
+% let ordre2 tas1 tas2 =
+%   if taille tas1 > taille tas2
+%   then tas2, tas1
+%   else tas1, tas2;;
+% \end{lstlisting}
+
+% \begin{lstlisting}
+% let ordre tas1 tas2 tas3=
+%   let t4, t5 = ordre2 tas1 tas2 in
+%   let t_min, t6 = ordre2 t4 tas3 in
+%   let t_med, t_max = ordre2 t5 t6 in
+%   t_min, t_med, t_max;;
+% \end{lstlisting}
+% \end{Answer}
+% %-------------------------------------------------------------------------------
+% %-------------------------------------------------------------------------------
+
+

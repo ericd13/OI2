@@ -1,0 +1,472 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Tas persistants}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\thispagestyle{empty}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{abstract}
+Dans le cours nous avons défini le type de tas qui a été implémenté à l'aide d'un tableau. On a ainsi utilisé une structure de données itératives, c'est-à-dire non persistante.
+
+Nous allons dans ce travail revenir au type récursif d'arbre binaire.
+\end{abstract}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Présentation}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On veut implémenter le type de données abstraite de file de priorité. Dans ce TP, la priorité maximale correspondra à une clé minimale. On manipule des ensembles de couples {\it clé$\times$valeur} où la clé est un entier et la valeur est de type $\alpha$ (\type{'a}).
+
+Dans ce TP nous simplifierons l'étude en ne manipulant que les clés entières.
+
+
+On a donc besoin d'un type \type{fdp} avec les fonctions
+\begin{enumerate}
+\item \type{fpVide : int -> fdp}, 
+\item \type{estVide : fdp -> bool},
+\item l'ajout est \type{ajouter : fdp -> int -> fdp}, 
+
+ on crée un nouvel objet
+\item \type{premier : fdp ->  int} ,
+
+permet de voir l'élément de priorité maximale (de clé minimale) et sa priorité,
+\item le retrait de l'élément prioritaire est \type{enlever : fdp -> fdp}.
+\end{enumerate}
+%
+\bigskip
+
+Le type sera classiquement 
+\begin{lstlisting}
+type fdp = Vide | Noeud of fdp * int * fdp;;
+\end{lstlisting}
+
+La taille d'un arbre $a$ est notée $|a|$.
+
+Notre structure de file de priorité sera implémentée par des tas de Braun croissants ; ce sont des arbres binaires qui vérifient les deux propriétés suivantes.
+%-------------------------------------------------------------------------------
+\begin{description}
+  \item[croissance] : l'étiquette de tout nœud est inférieure aux étiquettes de ses fils,
+  \item[équilibre fort] : pour tout nœud, \type{Noeud(g,x,d)}, $|d| \le |g| \le |d|+1$.
+\end{description}
+%-------------------------------------------------------------------------------
+Ces propriétés devront être maintenues dans les constructions.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Fonctions}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Test]\it 
+Écrire une fonction \type{estBraun : fdp -> bool} qui renvoie true ou \type{false} selon que l'arbre passé en paramètre est ou non un tas de Braun.
+
+On pourra écrire une fonction auxiliaire qui renvoie ce booléen, la taille de l'arbre et sa racine.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let racine arbre = 
+   match arbre with
+   |Vide -> failwith "L'arbre est vide"
+   |Noeud(_,x,_) -> x;;
+  
+let estBraun arbre = 
+   let rec aux arbre =
+      match arbre with
+      |Vide -> true, 0, max_int
+      |Noeud(Vide,x,Vide) -> true, 1, x
+      |Noeud(g,x,Vide) -> let b, n, y = aux g in (n=1), (n+1), x
+      |Noeud(Vide, x, d) -> let b, n, y = aux d in false, (n+1), x
+      |Noeud(g, x, d) -> let bg, ng, xg = aux g in
+                         let bd, nd, xd = aux d in
+                         (xg >= x) && (xd >= x) && bg && bd && (nd <= ng) && (nd <= ng+1), 
+                         ng + nd + 1, 
+                         x
+  in let b, n, x = aux arbre in b;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Premières fonctions]\it 
+
+Écrire les fonctions \type{fpVide}, \type{estVide} et \type{premier}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let fpVide n = Vide;;
+
+let estVide tas = 
+   tas = Vide;;
+
+let premier tas =
+  match tas with
+  |Vide -> failwith "Le tas est vide"
+  |Noeud(_, n, _) -> n;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection*{Ajout}
+%-------------------------------------------------------------------------------
+On remarque que, pour garder la condition d'équilibre fort lors de l'ajout, on ne peut ajouter un élément que sur le fils de droite mais qu'alors celui-ci devient le fils de plus grande taille et il faut inverser les fils.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Ajouter]\it 
+Écrire une fonction \type{ajouter}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec ajouter x t =
+   match t with
+   |Vide -> Noeud(Vide, x, Vide)
+   |Noeud(g,y,d) ->  if x > y
+                     then Noeud(ajouter x d, y, g)
+                     else Noeud(ajouter y d, x, g);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\subsection*{Retrait}
+%-------------------------------------------------------------------------------
+Pour pouvoir enlever l'élément prioritaire on aura besoin de reconstruire un tas de Braun à partir de deux fils et d'un entier. On suppose, dans la question suivante que \type{a1} et \type{a2} sont deux tas de braun tels que $|a_2| \le |a_1| \le |a_2|+1$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Enlever un élément]\it 
+Écrire une fonction \type{extractionGauche : arbre -> int * arbre} qui reçoit un tas de Braun et qui renvoie l'élément le plus à gauche et un tas de Braun contenant les éléments restants.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec extractionGauche arbre = 
+   match arbre with
+   |Vide -> failwith "L'arbre est vide"
+   |Noeud(Vide, x,_) -> x, Vide
+   |Noeud(g, x, d) -> let y, g1 = extractionGauche g in y, Noeud(d, x, g1);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Reconstitution]\it 
+Écrire une fonction \type{union : int -> arbre -> arbre -> arbre} qui reçoit un entier $k$ et deux tas de Braun de taille adéquate et qui renvoie un tas de Braun contenant les étiquettes des deux arbres et $k$ en plus.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} On commence par les cas où la racine finale n'est pas $k$, les autres cas se construisent simplement.
+\begin{lstlisting}
+let rec union k a1 a2 =
+  match a1, a2 with
+  |Noeud(g1, r1, d1), Noeud(g2, r2, d2) when (r1 < k) && (r1 < r2) 
+        -> Noeud(union k g1 d1, r1, a2)
+  |Noeud(g1, r1, d1), Noeud(g2, r2, d2) when (r2 < k) && (r2 <= r1) 
+        -> Noeud(a1, r2, union k g2 d2)
+  |Noeud(Vide, r, Vide), Vide when (r < k)
+        -> Noeud(Noeud(Vide, k, Vide), r, Vide)
+  |_, _ -> Noeud(a1, k, a2);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Enlever la racine]\it 
+En déduire une fonction \type{enlever : arbre -> arbre} qui renvoie un tas de Braun obtenu en enlevant la racine du tas passé en paramètre.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let enlever arbre = 
+  match arbre with
+  |Vide -> failwith "L'arbre est vide"
+  |Noeud(Vide, _, _) -> Vide
+  |Noeud(g, x, d) -> let y, g1 = extractionGauche g in union y d g1;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Question facultative]\it 
+Déterminer une autre manière d'enlever l'élément prioritaire en remontant la racine d'un fils.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} On peut enlever récursivement la racine (\type{rg}) du fils gauche en modifiant celui-ci en \type{g1}. 
+
+On note \type{d = Noeud(gd, rd, dd)} le fils droit. 
+Si \type{rg <= rd} on renvoie \type{Noeud(d, rg, g1)} sinon on renvoie \type{Noeud(union rg gd dd, rd, g1)}.
+\begin{lstlisting}
+let rec enlever1 arbre = 
+   match arbre with
+   |Vide -> failwith "L'arbre est vide"
+   |Noeud(g, r, Vide) -> g
+   |Noeud(g, r, (Noeud(gd, rd, dd) as d))
+           -> let rg = premier g in
+              let rd = premier d in                                     
+              let g1 = enlever1 g in 
+              if rg < rd then Noeud(d, rg, g1)
+                         else Noeud(union rg gd dd, rd, g1);;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Calcul des nombres de {\sc Hamming}}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Les nombres de {\sc Hamming} sont les entiers qui n'admettent que 2, 3 et 5 comme diviseurs premiers, ce sont les entiers de l forme $n = 2^a.3^b.5^c$.
+
+On remarque que si $x$ est un nombre de {\sc Hamming} alors $2x,3x,5x$ le sont aussi, et que tous les nombres de {\sc Hamming} à part $1$ s'obtiennent en multipliant par $2$ ou $3$ ou $5$ un nombre de {\sc Hamming} plus petit.
+
+Pour obtenir les nombres de Hamming successifs, on peut
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+\item Initialiser une file de priorité avec le nombre 1, 
+\item répéter $n$ fois :
+extraire le premier élément de la file, $x$ et insérer $2x$, $3x$ et $5x$ dans la file.
+\end{enumerate}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Une première tentative]\it 
+Programmer cet algorithme.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec hamming n =
+   let rec aux n tas =
+      match n with
+      |1 -> premier tas
+      |n -> let p = premier tas in
+            let t1 = enlever tas in
+            let t2 = ajouter (5*p) t1 in
+            let t3 = ajouter (3*p) t2 in
+            let t4 = ajouter (2*p) t3 in
+            aux (n-1) t4
+  in let t0 = ajouter 1 (fpVide 0) in aux n t0;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\bigskip
+
+Les 20 premiers nombres de Hamming sont 
+
+1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24, 25, 27, 30, 32, 36.
+
+L'algorithme précédent va produire 
+
+1, 2, 3, 4, 5, 6, 6, 8, 9, 10, 10, 12, 12, 15, 15, 16, 18, 18, 18.
+
+Le nombre 900 apparaît 90 fois ! En effet les éléments sont insérés plusieurs fois.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Correction]\it 
+Écrire une fonction qui renvoie vraiment le $n$-ième nombre de Hamming.
+
+On pourra vérifier : le 1000-ième nombre de Hamming est $51\,200\,000$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}$x$ est un nombre de {\sc Hamming} extrait de la file.
+
+Si $x$ est divisible par $5$, $x=5y$, alors $2x = 5.2y$ a été inséré auparavant car $2y < x$.
+
+De même $3x = 5.3y$ est aussi présent. Il est donc inutile d'insérer ces nombres, seul $5x$ est nouveau. 
+
+Lorsque $x$ n'est pas divisible par $5$ mais l'est par $3$ alors un raisonnement analogue montrer qu'il est inutile d'insérer $2x$.
+
+\begin{lstlisting}
+let rec hamming n =
+   let rec aux n tas =
+      match n with
+      |1 -> premier tas
+      |n -> let p = premier tas in
+            let t1 = enlever tas in
+            let t2 = ajouter (5*p) t1 in
+            if p mod 5 = 0
+            then aux (n-1) t2
+            else let t3 = ajouter (3*p) t2 in
+                 if p mod 3 = 0
+                 then aux (n-1) t3
+                 else let t4 = ajouter (2*p) t3 in
+                      aux (n-1) t4
+  in let t0 = ajouter 1 (fpVide 0) in aux n t0;;
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Nombres taupins} 
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Dans les temps anciens, chaque taupin avait un numéro secret, son {\bf nombre taupin}.
+
+Les premiers étudiants avaient le numéro 1.
+
+Pour les étudiants suivant le nombre était attribué par le parrain.
+\begin{itemize}
+    \item Si le parrain, de numéro $n$, est carré il attribue le numéro $2n$ à son filleul.
+    \item Si le parrain est cube (de numéro $n$) il attribue le numéro $3n - 1$ à son filleul : un cube sait faire 2 opérations à la fois.
+\end{itemize}
+
+On peut remarquer que tous les entiers ne sont pas attribués : par exemple 7 ne peut pas être de la forme $2n$ ni de la forme $3n - 1$.
+
+La question se pose de savoir si un entier est un nombre taupin possible : par exemple 1000 est obtenu par la suite
+$1 \rightarrow 2 \rightarrow 5 \rightarrow 14 \rightarrow 28 \rightarrow 56 \rightarrow 167  \rightarrow 500  \rightarrow 1000$.
+
+
+On peut remarquer que toutes les suites commencent par $1\rightarrow 2$.
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title=Test de taupinalité]
+Écrire une fonction \type{est\_taupin(n)} qui renvoie \type{true} ou \type{false} selon que $n$ est ou non un nombre taupin.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec est_taupin n =
+  if n <= 2
+  then true
+  else begin
+    if n mod 2 = 0
+    then begin
+      if n mod 3 = 2 
+      then est_taupin (n/2) || est_taupin ((n+1)/3)
+      else est_taupin (n/2) end
+    else begin
+      if n mod 3 = 2
+      then est_taupin ((n+1)/3)
+      else false end end;;           
+\end{lstlisting}
+\newpage
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\medskip
+On aurait aimé pouvoir suivre la généalogie d'un nombre taupin, en calculant le nombre taupin du parrain. malheureusement il peut exister des nombres qui sont obtenus de plusieurs manières. Par exemple
+
+$1 \rightarrow 2 \rightarrow 4 \rightarrow 8 \rightarrow 16 \rightarrow 32$ et
+$1 \rightarrow 2 \rightarrow 4 \rightarrow 11 \rightarrow 32$.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title=Nombre de filières]
+Écrire une fonction \type{filieres n} qui renvoie le nombre de manières (qui peut être 0) d'obtenir $k$ à partir de $2$ avec les transformations $k \mapsto 2k$ et $k \mapsto 3k-1$ pour tout $k$ compris entre 0 et $n$.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let rec filieres n =
+  if n <= 2
+  then 1
+  else begin
+    if n mod 2 = 0
+    then begin
+      if n mod 3 = 2 
+      then filieres (n/2) + filieres ((n+1)/3)
+      else filieres (n/2) 
+      end
+    else begin
+      if n mod 3 = 2
+      then filieres ((n+1)/3)
+      else 0
+      end
+    end;;           
+\end{lstlisting}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title=3 filières]
+Déterminer le premier nombre taupin qui peut peut l'être avec 3 chemins.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{lstlisting}
+let n = ref 1;;
+while filieres !n < 4 do n := !n + 1 done;;
+print_int !n;;
+\end{lstlisting}
+
+On trouve 20480
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title=4 filières]
+Déterminer le premier nombre taupin qui peut peut l'être avec 4 chemins.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Ici le calcul est long, 30 minutes. On peut accélérer en employant une file de priorité.
+\begin{lstlisting}
+let k_filieres k = 
+  let rec aux nb n file =
+    if nb = k
+    then n
+    else begin
+      let n1 = next file in
+      let new_f = add (add (remove file) (2*n1)) (3*n1 - 1) in
+      if n1 = n
+      then aux (nb + 1) n new_f
+      else aux 1 n1 new_f end
+  in aux 1 1 (add (createPQ()) 2);;
+  \end{lstlisting}
+
+On trouve $3\,988\,094\,144$ mais il faut 7 minutes !
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Propriétés des arbres fortement équilibrés}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Dans cette partie on suppose que \type{a} est un arbre fortement équilibré, c'est-à-dire qu'il vérifie la condition d'équilibre fort.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}{\it
+\begin{enumerate}
+\item Déterminer la taille des fils d'un arbre fortement équilibré $a$ de taille $n$.
+\item Prouver qu'un arbre  fortement équilibré de taille $2^k-1$ est complet.
+\item Prouver qu'un arbre  fortement équilibré de taille $n\ge 1$ avec $2^k \le n < 2^{k+1}$ est de hauteur $k$.
+\item Prouver qu'un arbre  fortement équilibré est quasi-complet.
+\item Montrer que la feuille la plus à gauche d'un arbre fortement équilibré est à la profondeur maximale.
+\end{enumerate} }
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer} 
+\begin{enumerate}
+\item La taille des fils est $n_g$ et $n_d$ avec $n_d\le n_g \le n_d+1$ et $n_g+n_d+1=n$.
+
+On a donc $2n_g\le n_g+n_d+1 \le n$ et $2n_g\ge n_g+n_d = n-1$.
+
+Si $n$ est pair, $n=2p$, on a donc $n_g$ entier avec $p-\frac 12 \le n_g \le p$ puis $n_g =p$ puis $n_d=n-n-g-1=p-1$.
+
+Si $n=2p+1$ est impair, alors $p \le n_g \le p+\frac 12$ donne $n_g=p$ et $n_d=p$.
+
+On remarque qu'on a $n_g=\bigl\lfloor \frac n2\bigr\rfloor$.
+\item On démontre le résultat par récurrence sur $k$.
+
+Pour $k=1$ on a un arbre réduit à un seul nœud.
+
+Si la propriété est vrai pour les arbres fortement équilibré de taille $2^{k-1}-1$ on conclut pour un arbre fortement équilibré de taille $2^k-1$ cas ses fils sont fortement équilibrés de taille $2^{k-1}-1$ donc complets.
+\item On prouve le résultat par récurrence sur $n$.
+
+Pour $n=1$, la hauteur est 0 et $2^0\le 1 < 2^1$.
+
+Pour $n = 2$, la hauteur est 1 et $2^1\le 1 < 2^2$.
+
+On suppose la propriété vraie pour tout arbre fortement équilibré de taille $m< n$.
+
+On a $2^k \le n < 2^{k+1}$ donc $2^{k-1} \le n_g=\bigl\lfloor \frac n2\bigr\rfloor < 2^{k+1}$ donc le fils gauche est de hauteur $k-1$. Sauf dans le cas $n=2^k$, la taille du fils droit vérifie la même inégalité donc le fils droit est aussi de hauteur $k-1$. Ainsi l'arbre est de hauteur $k$ et ses deux fils sont de hauteur $k-1$.
+
+Si $n=2^k$ son fils gauche est de hauteur $k-1$ et son fils droit est de hauteur $k-2$ donc l'arbre est de hauteur $k$.
+\item Ici encore on procède par récurrence sur la taille.
+
+On a vu ci-dessus que les deux fils d'un arbre fortement équilibré de hauteur $h$ sont de même hauteur $h-1$ sauf dans le cas d'une taille $2^h$. Dans ce dernier cas le fils droit est de taille $2^{h-1}-1$ donc est complet de hauteur $h-2$. Dans tous les cas les fils d'un arbre fortement équilibré de hauteur $h$ n'ont que des feuilles à la hauteur $h-1$ ou $h-2$ : l'arbre est quasi-complet.
+\item Toujours une récurrence.
+\end{enumerate}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+
+
+

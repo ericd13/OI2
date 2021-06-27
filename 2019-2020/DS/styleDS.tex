@@ -1,0 +1,167 @@
+\documentclass[french,twoside]{book}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+%-------------------------------------------------------------------------- 
+% frenchb de babel change les points en tirets, retour à l'original :
+\frenchbsetup{ItemLabeli=$\bullet$}
+%--------------------------------------------------------------------------
+% Utilitaires
+%--------------------------------------------------------------------------
+% Packages mathématiques
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bold-extra}
+%--------------------------------------------------------------------------
+%Graphismes
+\usepackage{graphicx}%Pour l'inclusion d'images
+\usepackage{tikz}%Pour les dessins divers (arbres, graphes...)
+\usetikzlibrary{calc}
+\usepackage{multicol}%pour du texte sur plusieurs colonnes
+%--------------------------------------------------------------------------
+%Pour mettre en page des exercices facilement 
+\usepackage[lastexercise]{exercise}
+\renewcommand{\ExerciseName}{Question}
+\renewcommand{\ExerciseHeaderTitle}{\ ---\quad\textbf{\textsc{\ExerciseTitle}}}
+\renewcommand{\ExerciseHeader}{\vspace{0cm}\noindent\textbf{\ExerciseName\ \ExerciseHeaderNB}\ \ExerciseHeaderDifficulty\ExerciseHeaderTitle\par}
+
+\renewcommand{\AnswerHeader}{\noindent\textbf{Solution de la question \ExerciseHeaderNB{} - }} 
+\newcounter{exo}
+\setcounter{exo}{0}
+%--------------------------------------------------------------------------
+\newif\ifcaml \camlfalse
+\usepackage{listings}
+% Configuration des listings
+\lstset{escapechar = §,%
+        frameround=tttt, frame = lines, linewidth=0.95\textwidth,%
+        xleftmargin=0.025\textwidth,%
+        breaklines=true,% 
+        showstringspaces=false,%
+       }
+\lstset{
+literate = {à}{{\`a}}1
+           {À}{{\`A}}1
+           {â}{{\^a}}1
+           {ç}{{\c c}}1
+           {Ç}{{\c C}}1
+           {é}{{\'e}}1
+           {É}{{\'E}}1
+           {è}{{\`e}}1
+           {È}{{\`E}}1
+           {ê}{{\^e}}1
+           {Ê}{{\^E}}1
+           {ï}{{\"i}}1
+           {î}{{\^i}}1
+           {ô}{{\^o}}1
+           {œ}{{\oe}}1
+           {ù}{{\`u}}1 
+           {ÿ}{{\"y}}1
+       }
+\renewcommand{\lstlistingname}{Programme}
+\lstset{keywordstyle=\bfseries,%
+       commentstyle=\itshape,% 
+       stringstyle=,% 
+       basicstyle=\ttfamily
+      }
+\ifcaml
+  \lstset{tabsize = 2,%
+          language=caml,%
+         }
+\else
+  \lstset{tabsize = 4,%
+          language=python,%
+          morekeywords={as, assert, False, None, nonlocal, True, with, 
+                        yield,float, int, abs, type}
+          }
+\fi
+%--------------------------------------------------------------------------
+\newtheoremstyle{definition}%
+{}{}%
+{\itshape}{}%
+{\bfseries}{}%
+{\newline}%
+{\thmname{#1 : }\thmnumber{}\thmnote{#3}}
+\theoremstyle{definition}
+\newtheorem*{defin}{Définition}
+\newtheorem*{thm}{Théorème}
+%--------------------------------------------------------------------------
+% Diverses fonctions
+%--------------------------------------------------------------------------
+\def\Vec#1{\overrightarrow{#1}}
+\def\norme#1{\left\| #1 \right\|}
+\def\C{{\mathbb C}}
+\def\K{{\mathbb K}}
+\def\M{{\cal M}}
+\def\N{{\mathbb N}}
+\def\Q{{\mathbb Q}}
+\def\R{{\mathbb R}}
+\def\Z{{\mathbb Z}}
+\def\tr{{\rm tr}}
+\def\trans#1{\,{\vphantom{#1}}^t\!#1\/}
+\def\type#1{\text{\normalfont\ttfamily #1}}
+\def\Type#1{{\normalfont\bfseries\ttfamily #1}}
+\let\le=\leqslant 
+% remplace le inférieur ou égal avec barre horizontale par une barre oblique
+\let\ge=\geqslant 
+% remplace le supérieur ou égal avec barre horizontale par une barre oblique
+%--------------------------------------------------------------------------
+% Présentation
+%--------------------------------------------------------------------------
+% Je n'aime pas les indentations de paragraphe :
+\parindent=0pt
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+% Configuration de la page
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+%Taille des marges
+\usepackage[a4paper,left=3cm,right=3cm,top=3cm,bottom=3cm]{geometry}
+%--------------------------------------------------------------------------
+% En-tête de chapitre (les différents poly)
+\usepackage[explicit]{titlesec}
+\titleformat{\chapter}[display]{\Large\bfseries}
+            {\filright {\scshape\huge  D.S. \numero}}{0pt}
+            {\titlerule \vspace{2ex}
+             \filleft\sffamily\bfseries
+               {\fontsize{50}{55}\usefont{T1}{qcs}{m}{sc}\selectfont #1}
+            }
+            [\vspace{2ex}\titlerule]
+
+\titlespacing*{\chapter}{0pt}{0pt}{3cm}
+%--------------------------------------------------------------------------
+% Choix de la numérotation
+\renewcommand{\thechapter}{\Roman{chapter}}
+\renewcommand{\thesection}{\arabic{section}}
+%--------------------------------------------------------------------------
+%Configuration des en-têtes et bas-de-pages
+\usepackage{fancyhdr}
+% Le style pour les polys info sup
+\pagestyle{fancy}
+% Voici les commandes pour les intitulés leftmark, rightmark)
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter. {\sc #1}}{} }
+\renewcommand{\sectionmark}[1]{\markright{\thechapter.\thesection-#1}{} }
+% Hauts de page, O/E pour impair/pair (odd/even)
+%                L/R pour gauche droite
+\fancyhead[RO, LE]{DS \numero}% Pages impaires haut gauche : section
+\fancyhead[LO,RE]{\classe}
+% bas de page, mêmes positions
+\fancyfoot[LO,RE]{}
+\fancyfoot[LE,RO]{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.2pt}% Ligne en haut
+\renewcommand{\footrulewidth}{0pt}% pas en bas
+%-------------------------------------------------------------------------- 
+\renewcommand{\thefigure}{\arabic{figure}}
+%-------------------------------------------------------------------------- 
+% Pour les premières pages, on peut imposer un style vide
+% en écrivant *\thispagestyle{empty}* après le chapitre
+%--------------------------------------------------------------------------
+\newenvironment{abstract}{\begin{minipage}{0.2\linewidth} {\Large \bf Objectifs} \end{minipage}
+\begin{minipage}{0.75\linewidth}\itshape} {\end{minipage}}
+%--------------------------------------------------------------------------
+% Personnalisations générales
+\title{D.S. d'informatique}
+\date{2018-2019}

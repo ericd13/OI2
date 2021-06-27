@@ -1,0 +1,22 @@
+%-------------------------------------------------------------------------------
+\input{definitions}
+%------------------------------------------------------------------------------- 
+% Personnalisations générales
+\def\titre{Oraux d'informatique}
+\def\classe{MP1 option informatique}
+\def\annee{2020-2021}
+\addto\captionsfrench{\renewcommand{\chaptername}{Sujet}}
+\renewcommand{\thechapter}{\Alph{chapter}}
+\renewcommand{\ExerciseName}{Question}
+\graphicspath{{./Images/}}
+% pagination par chapitre
+\usepackage{chappg}
+\reponsestrue
+%------------------------------------------------------------------------------- 
+\begin{document}
+%-------------------------------------------------------------------------------
+\premierePage
+\tableofcontents
+\chapitre{Circuits_comparateurs}
+\chapitre{Affine_morceaux}
+\end{document}
