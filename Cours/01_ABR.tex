@@ -26,38 +26,31 @@ Il faudra maintenir des arbres équilibrés : arbres AVL, arbres rouge-noir, arb
 
 Ce sera l'objet d'un T.P.
 \end{itemize}
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+\subsection{Comparaisons}
+%--------------------------------
+%--------------------------------
+On a besoin de comparer les éléments entre eux, c'est possible pour une valeur de type entier, réel ou chaîne de caractères. Pour pouvoir utiliser d'autres types de données, on utilisera une fonction \type{cle} qui associe un entier (ou un autre type muni d'une relation d'ordre) à chaque valeur de nœud : @cle 'a  -> int@.
 
-Dans ce chapitre les nœuds porteront une variable d'un type qui peut être composé.
+On imposera que les clés doivent être distinctes dans l'arbre ; autrement dit la restriction de la fonction \type{cle} aux valeurs de l'arbre doit être injective.
 
-On supposera donnée une fonction \type{cle} qui associe un entier à chaque valeur.
-%--------------------------------
-\begin{lstlisting}
-cle 'a  -> bool
-\end{lstlisting} 
-%--------------------------------
-On imposera que les clés doivent être distinctes dans l'arbre. ; autrement dit la restriction de la fonction \type{cle} aux valeurs de l'arbre doit être injective.
+Dans la partie {\bf 2}, les valeurs seront entières et on peut écrire @let cle x = x;;@
 
-Dans les exemple, les variables seront entières et on peut écrire
-%--------------------------------
-\begin{lstlisting}
-let cle x = x;;
-\end{lstlisting} 
-%--------------------------------
-\newpage
-%--------------------------------
-\section{Arbres binaires de recherche}
+Dans la partie {\bf 3}, on utilisera les arbres binaires pour implémenter des dictionnaires, les valeurs des nœuds sont alors des couples clé-valeur et on peut écrire @let cle = fst;;@
 %--------------------------------
 %--------------------------------
 \subsection{Définition}
 %--------------------------------
+%--------------------------------
 \begin{defin}{Arbre binaire de recherche (ABR)}{abr}
 Un arbre binaire de recherche est un arbre binaire tel que,  pour tout nœud $x$,  les clés des éléments du fils gauche sont strictement inférieures à la clé de $x$ et les clés des éléments du fils droit sont strictement supérieures à la clé de $x$.
 \end{defin}
+%--------------------------------
 
-{\bf Exemple}
-
-\begin{center}
-\begin{tikzpicture}[level distance =2cm,scale=0.8]
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
   \tikzstyle{level 1}=[sibling distance =5cm]
   \tikzstyle{level 2}=[sibling distance =3 cm]
   \tikzstyle{level 3}=[sibling distance =2 cm]
@@ -75,21 +68,27 @@ Un arbre binaire de recherche est un arbre binaire tel que,  pour tout nœud $x$
          child {node{$31$}}
         };
 \end{tikzpicture}
-\end{center}
+\caption{Exemple : arbre $a_0$}
+\label{g:a0}
+\end{figure*}
 
 La déclaration du type est la même que dans le cas d'un arbre binaire classique. Il faut vérifier soi--même que les clés sont distinctes et dans le bon ordre.
 
 %--------------------------------
-\begin{lstlisting}
-type 'a abr = Vide | Noeud of ('a abr*'a*'a abr);; 
-\end{lstlisting} 
+\begin{ocaml}
+type 'a abr = Vide | Noeud of ('a abr * 'a * 'a abr);; 
+\end{ocaml} 
 %--------------------------------
 On étudiera des arbres de type \type{int} dans les illustrations du cours.
 
 On ne dessinera en général pas les feuilles vides.
 %--------------------------------
 %--------------------------------
-\subsection{Recherche}
+\section{Recherche}
+%--------------------------------
+%--------------------------------
+\subsection{Algorithme}
+%--------------------------------
 %--------------------------------
 Une fonction de base est la recherche d'un élément dans un arbre : on renvoie un booléen indiquant s'il existe un élément de clé donnée dans l'arbre. Pour cela on ''descend'' dans l'arbre en choisissant le fils gauche ou le fils droit selon que la valeur à chercher est inférieure ou supérieure au la clé de la racine. On remarque que c'est le principe de la recherche par dichotomie
 
@@ -97,9 +96,11 @@ On parcourt ainsi (partiellement) une branche de l'arbre.
 
 \medskip
 
-Si on aboutit à la valeur, c'est qu'elle est dans l'arbre. Par exemple, si on cherche 18
-\begin{center}
-\begin{tikzpicture}[level distance =2cm,scale=0.8]
+Si on aboutit à la valeur, c'est qu'elle est dans l'arbre. 
+
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
   \tikzstyle{level 1}=[sibling distance =5cm]
   \tikzstyle{level 2}=[sibling distance =3 cm]
   \tikzstyle{level 3}=[sibling distance =2 cm]
@@ -117,13 +118,14 @@ Si on aboutit à la valeur, c'est qu'elle est dans l'arbre. Par exemple, si on c
          child {node{$31$}}
         };
 \end{tikzpicture}
-\end{center}
+\caption{Recherche de 18 dans l'arbre $a_0$}
+\end{figure*}
 
 Par contre, si on aboutit à une feuille, c'est que la valeur n'est pas dans l'arbre. 
 
-Par exemple si on cherche 23 :
-\begin{center}
-\begin{tikzpicture}[level distance =2cm,scale=0.8]
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
   \tikzstyle{level 1}=[sibling distance =5cm]
   \tikzstyle{level 2}=[sibling distance =3 cm]
   \tikzstyle{level 3}=[sibling distance =2 cm]
@@ -141,42 +143,36 @@ Par exemple si on cherche 23 :
          child {node{$31$}}
         };
 \end{tikzpicture}
-\end{center}
-
+\caption{Recherche de 23 dans l'arbre $a_0$}
+\end{figure*}
 %--------------------------------
-\begin{code}{Recherche dans un arbre binaire de recherche}{ABRsearch}
-\begin{lstlisting}
+\begin{code}{Recherche dans un arbre binaire de recherche}
 let rec chercher k arbre = 
    match arbre with
    |Vide -> false
    |Noeud(g, r, d) when cle r = k -> true
    |Noeud(g, r, d) when k < cle r -> chercher k g
    |Noeud(g, r, d) -> chercher k d;;
-\end{lstlisting}
 \end{code}
 %--------------------------------
 %--------------------------------
-\subsection{Analyse de la recherche}
+\subsection{Analyse}
 %--------------------------------
 %--------------------------------
 Nous allons établir la terminaison, la preuve et la complexité en même temps en séparant les cas où la clé recherchée est ou n'est pas dans l'arbre.  La complexité est comptée en nombre de comparaisons.
-
 %--------------------------------
 \subsubsection{Absence de la clé}
 %--------------------------------
  Si la clé n'est pas dans l'arbre, chaque appel de la fonction à partir d'un sous-arbre non vide fera un appel à la fonction avec un des deux fils. Ainsi la hauteur de l'arbre en paramètre de la fonction diminue strictement à chaque appel. Comme la hauteur ne peut être inférieure à -1 le nombre d'appel est fini et on aboutit à un appel \type{chercher x Vide} qui renvoie \type{false}.
  
 L'algorithme termine en renvoyant la bonne réponse. De plus la diminution  d'au moins 1 de la hauteur à chaque appel récursif montre que le nombre d'appel est au plus $h+1$. Comme on fait 2 comparaisons à chaque appel sauf pour le cas de l'arbre vide la complexité en nombre de comparaisons est majorée par $2(h+1)$ ($h$ est la hauteur de l'arbre).
-
 %--------------------------------
 \subsubsection{Clé présente}
 %--------------------------------
  En s'inspirant du résultat ci-dessus on note ${\cal P}_h$ la propriété :
-
-\begin{defin}{Propriété ${\cal P}_h$}{}
-Pour tout arbre \type{a} de hauteur $h$ et pour toute clé \type{k} apparaissant dans l'arbre 
-\type{chercher k a} renvoie \type{true} avec $2h+1$ comparaisons au plus
-\end{defin}
+\poser{${\cal P}_h$}
+{Pour tout arbre \type{a} de hauteur $h$ et pour toute clé \type{k} apparaissant dans l'arbre 
+\type{chercher k a} renvoie \type{true} avec $2h+1$ comparaisons au plus.}
 
 On notera que l'arbre est non vide car il contient au moins le nœud de clé $k$, ainsi $h\ge 0$.
 
@@ -206,6 +202,24 @@ On notera que l'arbre est non vide car il contient au moins le nœud de clé $k$
  On a ainsi prouvé que l'algorithme termine dans tous les cas, qu'il renvoie la réponse exacte et que la complexité est majorée par $2h+2$, c'est un ${\cal O}(h)$.
 %--------------------------------
 %--------------------------------
+\subsection{Valeur du nœud}
+%--------------------------------
+%--------------------------------
+Si un élément de clé $k$ existe, la recherche ci-dessus parvient au nœud dont la clé est $k$. On peut transformar la fonction pour qu'elle renvoie sa valeur.
+%--------------------------------
+\begin{code}{Valeur d'un nœud en fonction de sa clé}
+let rec noeud k arbre = 
+  match arbre with
+  |Vide -> failwith "L'arbre ne contient pas la clé"
+  |Noeud(g, r, d) when cle r = k -> r
+  |Noeud(g, r, d) when k < cle r -> noeud k g
+  |Noeud(g, r, d) -> noeud k d;;
+\end{code}
+%--------------------------------
+%--------------------------------
+\section{Insertion et suppression}
+%--------------------------------
+%--------------------------------
 \subsection{Insertion aux feuilles}
 %--------------------------------
 Lorsque l'on cherche un élément qui n'est pas dans l'arbre, on aboutit à une feuille ; on peut alors remplacer la feuille par un nœud terminal.
@@ -218,16 +232,17 @@ Ici encore la complexité est proportionnelle au nombre d'appels récursifs effe
 
 {\bf Exemple} : on ajoute 25 à l'exemple initial :
 
-\begin{center}
-\begin{tikzpicture}[level distance =2cm,scale=0.8]
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =17mm,scale=0.8]
   \tikzstyle{level 1}=[sibling distance =5cm]
   \tikzstyle{level 2}=[sibling distance =3 cm]
   \tikzstyle{level 3}=[sibling distance =2 cm]
   \tikzstyle{every node}=[circle,draw]
   \node[fill=red] {$22$}
-   child {node{$13$}
-           child {node{$11$}}
-           child {node{$18$}
+  child {node{$13$}
+          child {node{$11$}}
+          child {node{$18$}
                   child {node{$16$}}
                   child [fill=none] {edge from parent[draw=none]}
                  }
@@ -237,640 +252,667 @@ Ici encore la complexité est proportionnelle au nombre d'appels récursifs effe
               child {node{$31$}}
         };
 \end{tikzpicture}
-\end{center}
+\caption{Ajout de 25 dans une feuille de l'arbre $a_0$.}
+\end{figure*}
 %--------------------------------
-\begin{code}{Insertion aux feuilles}{ABRleaf}
-\begin{lstlisting}
+\begin{code}{Insertion aux feuilles}
 let rec insertionF x arbre = 
-   match arbre with
-   |Vide -> Noeud(Vide, x,  Vide)
-   |Noeud(g, r d) when cle r = cle x-> Noeud(g, x, d)
-   |Noeud(g, r, d) when cle x = cle r
-                   -> Noeud((insertionF x  g), r, d)
-   |Noeud(g, r, d) -> Noeud(g, r, (insertionF x  d));;
-\end{lstlisting}
+  match arbre with
+  |Vide -> Noeud(Vide, x,  Vide)
+  |Noeud(g, r d) when cle r = cle x-> Noeud(g, x, d)
+  |Noeud(g, r, d) when cle x = cle r
+                  -> Noeud((insertionF x  g), r, d)
+  |Noeud(g, r, d) -> Noeud(g, r, (insertionF x  d));;
 \end{code}
 %--------------------------------
-% %--------------------------------
-% \subsection{Insertion à la racine}
-% %--------------------------------
-% On peut aussi choisir d'insérer un nouveau nœud en le plaçant à la racine.
+\newpage
+%--------------------------------
+\subsection{Insertion à la racine}
+%--------------------------------
+On peut aussi choisir d'insérer un nouveau nœud en le plaçant à la racine.
 
-% Pour cela on va couper l'arbre en deux parties regroupant les nœuds inférieurs à la nouvelle clé et ceux qui sont supérieurs.
-% La récursivité permet de le faire avec un coût minimum c'est-à-dire proportionnel à la hauteur et non à la taille.
+Pour cela on va couper l'arbre en deux parties regroupant les nœuds inférieurs à la nouvelle clé et ceux qui sont supérieurs.
 
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\node at (0,-0.2) (r) {22};
+\node at (-2.5,-1.5) (fg) {13};
+\node at (2.5,-1.5) (fd) {28};
+\node at (-4,-2.8) (fgg) {11};
+\node at (-1,-2.8) (fgd) {18};
+\node at (4,-2.8) (fdd) {31};
+\node at (-2,-4) (fgdg) {16};
+\draw (r) -- (fd)
+     (fg) -- (fgg)
+     (fd) -- (fdd);
+\draw [red,dashed]
+      (r) -- (fg)
+     (fg) -- (fgd)
+    (fgd) -- (fgdg);
+\draw[>-<,thick, red] (-1.5, 0.5) --  (-1.5,-5);
+\end{tikzpicture}
+\caption{Séparation de l'arbre $a_0$ par la clé 17}
+\end{figure*}
 
-% Le dernier arbre construit est coupé par 17 :
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\node at (0,-0.2) (r) {22};
+\node at (-5,0) (fg) {13};
+\node at (1.5,-1.5) (fd) {28};
+\node at (-6.5,-1.5) (fgg) {11};
+\node at (-1.5,-1.5) (fgd) {18};
+\node at (2.5,-2.8) (fdd) {31};
+\node at (-3.5,-1.5) (fgdg) {16};
+\draw (r) -- (fd)
+      (r) -- (fgd)
+     (fg) -- (fgg)
+     (fg) -- (fgdg)
+     (fd) -- (fdd);
+\end{tikzpicture}
+\caption{Reconstruction des deux arbres.}
+\end{figure*}
 
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\node[fill=red] at (-2.5,1.1) (r0) {17};
+\node at (0,-0.2) (r) {22};
+\node at (-5,-0.2) (fg) {13};
+\node at (1.5,-1.5) (fd) {28};
+\node at (-6.5,-1.5) (fgg) {11};
+\node at (-1.5,-1.5) (fgd) {18};
+\node at (2.5,-2.8) (fdd) {31};
+\node at (-3.5,-1.5) (fgdg) {16};
+\draw (r) -- (fd)
+      (r) -- (fgd)
+     (fg) -- (fgg)
+     (fg) -- (fgdg)
+     (fd) -- (fdd);
+\draw[dashed]  (r0) -- (r)
+              (r0) -- (fg);
+\end{tikzpicture}
+\caption{Ajout de 17 à la racine.}
+\end{figure*}
 
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (0,0) (r) {22};
-% \node at (-2.5,-1.5) (fg) {13};
-% \node at (2.5,-1.5) (fd) {28};
-% \node at (-4,-2.8) (fgg) {11};
-% \node at (-1,-2.8) (fgd) {18};
-% \node at (1,-2.8) (fdg) {25};
-% \node at (4,-2.8) (fdd) {31};
-% \node at (-2,-4) (fgdg) {16};
-% \draw (r) -- (fd)
-%      (fg) -- (fgg)
-%      (fd) -- (fdd)
-%      (fd) -- (fdg);
-% \draw [red,dashed]
-%       (r) -- (fg)
-%      (fg) -- (fgd)
-%     (fgd) -- (fgdg);
-% \draw[>-<,thick, red] (-1.5,0) --  (-1.5,-4.5);
-% \end{tikzpicture}
-% \end{center}
+La première étape consiste à produire les deux arbres séparés par la clé de l'élément que l'on veut ajouter. Le découpage et la reconstitution se font en même temps, récursivement.
 
-% On reconstruit deux arbres : 
+\newpage
 
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (0,0) (r) {22};
-% \node at (-5,0) (fg) {13};
-% \node at (1.5,-1.5) (fd) {28};
-% \node at (-6.5,-1.5) (fgg) {11};
-% \node at (-1.5,-1.5) (fgd) {18};
-% \node at (0.5,-2.8) (fdg) {25};
-% \node at (2.5,-2.8) (fdd) {31};
-% \node at (-3.5,-1.5) (fgdg) {16};
-% \draw (r) -- (fd)
-%       (r) -- (fgd)
-%      (fg) -- (fgg)
-%      (fg) -- (fgdg)
-%      (fd) -- (fdd)
-%      (fd) -- (fdg);
-% \end{tikzpicture}
-% \end{center}
+Si la clé de la valeur est strictement inférieure à celle de la racine, on découpe le fils gauche avec la clé de la valeur à ajouter.
 
-% On peut alors ajouter le nœud 17 à la racine.
+On obtient deux arbres : \type{g\_inf}, l'arbre formés des nœuds du fils gauche de clé inférieure à la coupure et, symétriquement, \type{g\_sup}.
 
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node[fill=red] at (-2.5,1.7) (r0) {17};
-% \node at (0,0) (r) {22};
-% \node at (-5,0) (fg) {13};
-% \node at (1.5,-1.5) (fd) {28};
-% \node at (-6.5,-1.5) (fgg) {11};
-% \node at (-1.5,-1.5) (fgd) {18};
-% \node at (0.5,-2.8) (fdg) {25};
-% \node at (2.5,-2.8) (fdd) {31};
-% \node at (-3.5,-1.5) (fgdg) {16};
-% \draw (r) -- (fd)
-%       (r) -- (fgd)
-%      (fg) -- (fgg)
-%      (fg) -- (fgdg)
-%      (fd) -- (fdd)
-%      (fd) -- (fdg);
-% \draw[dashed]  (r0) -- (r)
-%               (r0) -- (fg);
-% \end{tikzpicture}\end{center}
+\begin{center}
+\begin{tikzpicture}
+\tikzstyle{every node}=[circle,draw,minimum size=8mm]
+\node at (-5,0) (fg) {13};
+\node at (-6.5,-1.5) (fgg) {11};
+\node at (-1.5,0) (fgd) {18};
+\node at (-3.5,-1.5) (fgdg) {16};
+\draw (fg) -- (fgg)
+      (fg) -- (fgdg);
+\end{tikzpicture}
+\end{center}
 
-% \medskip
+ L'arbre des nœuds inférieurs à la coupure est alors \type{g\_inf} et l'arbre des nœuds supérieurs à la coupure est formé en remplaçant le fils gauche initial par \type{g\_sup}.
 
-% La première étape consiste à produire les deux arbres séparés par la clé de l'élément que l'on veut ajouter. Le découpage et la reconstitution se font en même temps, récursivement.
+On fait les opérations symétriques si la coupure est strictement supérieure à la racine.
 
-% Si la clé de la valeur est strictement inférieure à celle de la racine.
-
-% \begin{itemize}
-% \item On découpe le fils gauche avec la même valeur. On obtient deux arbres : \type{g\_inf}, l'arbre formés des nœuds du fils gauche de clé inférieure à la coupure et \type{g\_sup}.
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (-5,0) (fg) {13};
-% \node at (-6.5,-1.5) (fgg) {11};
-% \node at (-1.5,0) (fgd) {18};
-% \node at (-3.5,-1.5) (fgdg) {16};
-% \draw (fg) -- (fgg)
-%       (fg) -- (fgdg);
-% \end{tikzpicture}
-% \end{center}
-
-
-% \item L'arbre des nœuds inférieurs à la coupure est alors \type{g\_inf}.
-% \item L'arbre des nœuds supérieurs à la coupure est formé en remplaçant le fils gauche initial par \type{g\_sup}.
-% \end{itemize}
-
-% On fait les opérations symétriques si la coupure est strictement supérieure à la racine.
-
-% En cas d'égalité on retire la racine et on renvoie les deux fils. 
-
-% %--------------------------------
-% \placecode[force][code:rootBST]{Insertion à la racine dans un arbre binaire de recherche}{
-% \startML
-% let rec decoupage k a = 
-%   match a with
-%   |Vide -> (Vide,Vide)
-%   |Noeud(g, r, d) when cle r = r -> (g, d)
-%   |Noeud(g, r, d) when k < cle r
-%                   -> let (gg, gd) = decoupage k g 
-%                      in (gg, Noeud(gd, r, d))
-%   |Noeud(g,r, d) -> let (dg, dd) = decoupage k d 
-%                      in (Noeud(g, r, dg),dd);;
+En cas d'égalité on retire la racine et on renvoie les deux fils. 
+%--------------------------------
+\begin{code}{Insertion à la racine}
+let rec decoupage k a = 
+  match a with
+  |Vide -> (Vide,Vide)
+  |Noeud(g, r, d) when cle r = k -> (g, d)
+  |Noeud(g, r, d) when k < cle r
+                  -> let (gg, gd) = decoupage k g 
+                      in (gg, Noeud(gd, r, d))
+  |Noeud(g, r, d) -> let (dg, dd) = decoupage k d 
+                      in (Noeud(g, r, dg),dd);;
                 
-% let insertionRacine x a =
-%   let (g, d)= decoupage (cle x) a 
-%   in Noeud(g,x, d);;
-% \stopML}
-
-% Ici encore on remplace l'élément de l'arbre qui a une clé égale à celle de l'élément à ajouter.
-% %--------------------------------
-% \newpage
-% %--------------------------------
-% \subsection{Suppression}
-% %--------------------------------
-% La suppression d'un nœud demande de conserver la structure ordonnée.
-
-% Il est relativement facile d'imaginer comment supprimer une feuille : on la remplace par l'arbre vide.
-
-% Le cas d'un nœud interne $n$ est plus délicat. On se ramène au cas de la racine car il suffira de remplacer le sous--arbre dont $n$ est la racine par l'arbre diminué.
-
-% Un cas simple est celui d'un nœud sans fils gauche (ou droit) : l'arbre allégé est alors simplement le fils droit (ou gauche).
-
-% Pour ôter la racine d'un sous--arbre sans trop de modification on va choisir de le remplacer par un autre nœud de l'arbre. On choisira sa clé pour conserver la structure d'arbre binaire de recherche avec le minimum de modifications : le maximum dans le fils gauche (ou le minimum du fils droit) est un bon choix car sa clé sépare les cles restantes et on le remplace facilement par son fils gauche.
-
-% \medskip
-% On va donc opérer en 4 étapes.
-
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (-6,2)(fgg)  { 6};
-% \node at (-5,3)(fg)   { 9};
-% \node at (-4,0)(fgdgg){11};
-% \node at (-3,1)(fgdg) {12};
-% \node at (-2,0)(fgdgd){14};
-% \node at (-1,2)(fgd)  {16};
-% \node at ( 0,4)(r)    {17};
-% \node at ( 1,2)(fdg)  {18};
-% \node at ( 2,3)(fd)   {22};
-% \node at ( 3,1)(fddg) {25};
-% \node at ( 4,2)(fdd)  {28};
-% \node at ( 5,1)(fddd) {31};
-% \draw    (r) --    (fg)
-%          (r) --    (fd)
-%         (fg) --   (fgg)
-%         (fg) --   (fgd)
-%         (fd) --   (fdg)
-%         (fd) --   (fdd)
-%       (fgd) --  (fgdg)
-%       (fdd) --  (fddg)
-%       (fdd) --  (fddd)
-%       (fgdg) -- (fgdgg)
-%       (fgdg) -- (fgdgd);
-% \end{tikzpicture}\end{center}
-
-% \subsubsection{Enlever la racine}
-
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (-6,2)(fgg)  { 6};
-% \node at (-5,3)(fg)   { 9};
-% \node at (-4,0)(fgdgg){11};
-% \node at (-3,1)(fgdg) {12};
-% \node at (-2,0)(fgdgd){14};
-% \node at (-1,2)(fgd)  {16};
-% %\node at ( 0,4)(r)    {17};
-% \node at ( 1,2)(fdg)  {18};
-% \node at ( 2,3)(fd)   {22};
-% \node at ( 3,1)(fddg) {25};
-% \node at ( 4,2)(fdd)  {28};
-% \node at ( 5,1)(fddd) {31};
-% \draw   (fg) --   (fgg)
-%         (fg) --   (fgd)
-%         (fd) --   (fdg)
-%         (fd) --   (fdd)
-%       (fgd) --  (fgdg)
-%       (fdd) --  (fddg)
-%       (fdd) --  (fddd)
-%       (fgdg) -- (fgdgg)
-%       (fgdg) -- (fgdgd);
-% \end{tikzpicture}\end{center}
-
-% \subsubsection{Calculer la clé maximale du fils gauche}
-
-% On cherche récursivement le fils droit sans fils droit.
-
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (-6,2)(fgg)  { 6};
-% \node at (-5,3)(fg)   { 9};
-% \node at (-4,0)(fgdgg){11};
-% \node at (-3,1)(fgdg) {12};
-% \node at (-2,0)(fgdgd){14};
-% \node[fill=red] at (-1,2)(fgd)  {16};
-% \node at ( 1,2)(fdg)  {18};
-% \node at ( 2,3)(fd)   {22};
-% \node at ( 3,1)(fddg) {25};
-% \node at ( 4,2)(fdd)  {28};
-% \node at ( 5,1)(fddd) {31};
-% \draw   (fg) --   (fgg)
-%         (fd) --   (fdg)
-%         (fd) --   (fdd)
-%       (fdd) --  (fddg)
-%       (fdd) --  (fddd)
-%       (fgdg) -- (fgdgg)
-%       (fgdg) -- (fgdgd)
-%         (fg) --   (fgd)
-%       (fgd) --  (fgdg);
-% \end{tikzpicture}\end{center}
-
-% \subsubsection{Reconstituer le fils gauche}
-
-% Si $T$ est le sous--arbre du fils gauche dont la clé est maximale alors il n'a pas de fils droit (qui, sinon, aurait des clés supérieures)~; le fils gauche de $T$ remplace  $T$.
-
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (-6,2)(fgg)  { 6};
-% \node at (-5,3)(fg)   { 9};
-% \node at (-4,1)(fgdgg){11};
-% \node at (-3,2)(fgdg) {12};
-% \node at (-2,1)(fgdgd){14};
-% \node at (-1,2)(fgd)  {16};
-% \node at ( 1,2)(fdg)  {18};
-% \node at ( 2,3)(fd)   {22};
-% \node at ( 3,1)(fddg) {25};
-% \node at ( 4,2)(fdd)  {28};
-% \node at ( 5,1)(fddd) {31};
-% \draw   (fg) --   (fgg)
-%         (fd) --   (fdg)
-%         (fd) --   (fdd)
-%       (fdd) --  (fddg)
-%       (fdd) --  (fddd)
-%       (fgdg) -- (fgdgg)
-%       (fgdg) -- (fgdgd);
-% \draw[dashed](fg) --  (fgdg);
-% \end{tikzpicture}\end{center}
-% \subsubsection{Reconstruire l'arbre}
-
-% \begin{center}
-% \begin{tikzpicture}
-% \tikzstyle{every node}=[circle,draw,minimum size=8mm]
-% \node at (-6,2)(fgg)  { 6};
-% \node at (-5,3)(fg)   { 9};
-% \node at (-4,1)(fgdgg){11};
-% \node at (-3,2)(fgdg) {12};
-% \node at (-2,1)(fgdgd){14};
-% \node at (-1,4)(fgd)  {16};
-% \node at ( 0,2)(fdg)  {18};
-% \node at ( 1,3)(fd)   {22};
-% \node at ( 2,1)(fddg) {25};
-% \node at ( 3,2)(fdd)  {28};
-% \node at ( 4,1)(fddd) {31};
-% \draw   (fg) --   (fgg)
-%         (fg) --  (fgdg)
-%         (fd) --   (fdg)
-%         (fd) --   (fdd)
-%       (fdd) --  (fddg)
-%       (fdd) --  (fddd)
-%       (fgdg) -- (fgdgg)
-%       (fgdg) -- (fgdgd)
-%       (fgd) -- (fg)
-%       (fgd) -- (fd);
-% \end{tikzpicture}\end{center}
-
-% On peut écrire les fonctions correspondantes
-
-% %--------------------------------
-% \begin{lstlisting}
-% let rec maxArbre arbre = 
-%   match arbre with
-%   |Vide -> failwith "Arbre vide"
-%   |Noeud(g, r, Vide) -> r
-%   |Noeud(g, r, d) -> maxArbre d;;
-% \end{lstlisting}
-% %--------------------------------
-% \begin{lstlisting}
-% let rec suppressionMax arbre = 
-%   match arbre with
-%   |Vide -> failwith "Arbre vide"
-%   |Noeud(g, r, Vide) -> g
-%   |Noeud(g, r, d) -> Noeud(g, r, suppressionMax d);;
-% \end{lstlisting}
-% %--------------------------------
-% \placecode[force][code:suppRootBST]{Suppression de la racine dans un arbre binaire de recherche}{
-% \startML
-% let suppressionRacine arbre = 
-%   match arbre with
-%   |Vide -> Vide
-%   |Noeud(Vide, r, d) -> d
-%   |Noeud(g, r, d) ->  let  y = maxArbre g in
-%                       Noeud(suppressionMax g, y, d);;
-% \stopML}
-% %--------------------------------
-
-% On peut alors revenir au cas général.
-
-% %--------------------------------
-% \placecode[force][code:suppBST]{Suppression d'un nœud dans un arbre binaire de recherche}{
-% \startML
-% let rec suppression k arbre = 
-%   match arbre with
-%   |Vide -> Vide
-%   |Noeud(g, r, d) when cle r = k 
-%                      -> suppressionRacine arbre
-%   |Noeud(g, r, d) when k < cle r 
-%                      -> Noeud((suppression k g), r, d)
-%   |Noeud(g, r, d) -> Noeud(g, r, (suppression k d));;
-% \stopML}
-% %--------------------------------
-% \newpage
-% %--------------------------------
-% \section{Application : dictionnaires}
-% %--------------------------------
-% %--------------------------------
-
-% Lors de l'étude des structures abstraites nous avons définis les dictionnaires (ou tableaux associatifs) qui sont des structures de données abstraites où l'on stocke des éléments munis d'une clé.
-
-% On travaillera donc  avec des éléments d'un type \type{'a} pour lesquels lae fonction \type{cle : 'a -> int} qui associe un indice unique à chaque élément est {\bf injective} .
-
-% Le type abstrait doit définir les fonctions :
-% %--------------------------------
-% \begin{itemize}
-% \item \type{dictionnaireVide : unit -> 'a dict}, qui construit un dictionnaire vide,
-% \item \type{insertion : 'a -> 'a dict -> 'a dict}, qui insère un élément dans le dictionnaire,
-% \item \type{defini : int -> 'a dict -> bool}, qui teste si une clé correspond à une entrée,
-% \item \type{valeur : int -> 'a dict -> 'a}, qui retrouve, s'il existe, l'élément du dictionnaire correspondant à une clé donnée.
-% \item \type{retrait : int -> 'a dict -> 'a dict}, qui élimine un élément défini par sa clé.
-% \end{itemize}
-% %--------------------------------
-% On remarquera que les fonctions ci-dessus correspondent à un type de données persistant : on conserve les dictionnaires et l'ajout ou le retrait d'un élément crée un nouveau dictionnaire.
-
-% \medskip
-
-% Nous avons utilisé des tables de hachages pour implémenter cette structure : les différentes fonctions sont alors très efficaces. Cependant il est difficile dans ce cas d'énumérer les éléments, ou ceux dont les clés sont dans un intervalle. De plus le type n'est pas persistant.
-
-% \medskip
-
-% On peut utiliser la structure d'arbre binaire de recherche.
-
-% Dans l'exemple les éléments seront  des couples $(a,b)$ où $a$ est la clé.
-
-% \medskip
-
-% {\bf Exemple}
-% %--------------------------------
-% \begin{center}
-% \begin{tikzpicture}[level distance =15mm]
-%   \tikzstyle{level 1}=[sibling distance =4cm]
-%   \tikzstyle{level 2}=[sibling distance =3cm]
-%   \tikzstyle{level 3}=[sibling distance =2cm]
-%   \tikzstyle{every node}=[rectangle,draw, rounded corners]
-%   \node {$22$, "léa''}
-%   child {node{$13$, "tom"}
-%           child {node{$11$, "jim"}}
-%           child {node{$18$, "abe"}
-%                   child {node{$16$, "ève"}}
-%                   child [fill=none] {edge from parent[draw=none]}
-%                  }
-%         }
-%   child {node{$28$,"jo"}
-%           child [fill=none] {edge from parent[draw=none]}
-%           child {node{$31$, "ida"}}
-%         };
-% \end{tikzpicture}
-% \end{center}
-
-% \newpage
-
-% Les fonctions sont alors simplement des renommages.
-% %--------------------------------
-% \begin{lstlisting}
-% let dictionnaireVide () -> Vide;;
-% let insertion = insertionRacine;;
-% let defini = chercher;;
-% let retrait = suppression;;
-% \end{lstlisting}
-% %--------------------------------
-
-
-% Sauf pour la valeur d'un élément en fonction de sa clé qui est une modification simple de la recherche.
-% %--------------------------------
-% \begin{lstlisting}
-
-% let rec valeur k arbre = 
-%   match arbre with
-%   |Vide -> failwith "Il n'y a pas d'élément associé"
-%   |Noeud(g, r, d) when cle r = k -> r
-%   |Noeud(g, r, d) when k < cle r -> valeur k g
-%   |Noeud(g, r, d) -> valeur k d;;
-% \end{lstlisting}
-% %--------------------------------
-% \newpage
-% %--------------------------------
-% \section{Exercices}
-% %--------------------------------
-% %--------------------------------
-% \startexo {\bf Une caractérisation } 
-
-% Prouver qu'un arbre binaire est un arbre binaire de recherche si et seulement si le parcours {\bf infixe} des clés de l'arbre donne une suite strictement croissante.
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse 
-% {\bf Sens inverse}
-
-% On suppose que le parcours infixe lit les clés dans l'ordre croissant
-
-% Pour tout sous--arbre les clés du fils gauche sont lues par le parcours infixe avant la clé de la racine donc, comme le parcours est croissant, les clés du fils gauche sont inférieures à celle de la racine. 
-
-% De même les clés du fils droit sont supérieures à celle de la racine.
-
-% L'arbre est donc bien un A.B.R.
-
-% {\bf Sens direct}
-
-
-% On vérifie la réciproque par récurrence sur la hauteur.
-
-% \begin{itemize}
-% \item C'est évident pour un sous--arbre de hauteur 0.
-
-% \item Si c'est vrai pour tous les arbres de hauteur $p$ au plus.
-% Les  fils droit et gauche  d'un arbre de hauteur $p+1$ ont une hauteur inférieure ou égale à $p$. Le parcours infixe de $T$ se fait en parcourant le fils gauche, qui donne des clés croissantes par hypothèse de récurrence, puis en lisant la clé de la racine, supérieure aux précédentes, puis en parcourant le fils droit, toujours en croissant.
-
-% Le parcours infixe est croissant.
-
-% \end{itemize}
-% \stopreponse
-% \endrep
-
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Parcours de recherche}
-
-% On suppose que tous les nombres de 1 à 800 sont les clés d'un 
-% arbre binaire de recherche. Parmi les suites suivantes lesquelles ne peuvent pas être les clés d'un parcours de recherche de 417 ?
-
-% \begin{itemize}
-
-% \item 222, 457, 122, 217, 417
-
-% \item 601, 403, 555, 408, 523, 411, 466, 417
-
-% \item 601, 403, 555, 408, 563, 411, 466, 417
-
-% \item 901, 403, 555, 411, 466, 417
-% \end{itemize}
-
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse Le principe est que si on suit un arbre binaire de recherche $u_0, u_1, \ldots, u_p$ $u_{i+1} > u_i$ impose $u_j > u_i$ pour tout $j>i$.
-% \begin{itemize}
-% \item 122 n'est pas possible après 222, 457
-
-% \item 545, 215, 333, 401, 422, 417
-
-
-% \item 601, 403, 555, 408, 523, 411, 466, 417
-
-
-% \item 601, 403, 555, 408, 563, 411, 466, 417
-
-
-% \item 901, 403, 555, 411, 466, 417
-% \end{itemize}
-
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Vérification}
-
-% Écrire une fonction qui teste si l'arbre binaire passé en paramètre est un arbre binaire de recherche.
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse \type{Noeud(g, r, d)} est un arbre binaire de recherche si 
-
-%  \type{g} et \type{d} sont des arbres binaires de recherche,
-
-%  le maximum des clés de \type{g} est strictement inférieur à $n$,
+let insertionRacine x a =
+  let (g, d)= decoupage (cle x) a 
+  in Noeud(g,x, d);;
+\end{code}
+%--------------------------------
+Ici encore on remplace l'élément de l'arbre qui a une clé égale à celle de l'élément à ajouter.
+%--------------------------------
+%--------------------------------
+\subsection{Suppression}
+%--------------------------------
+%--------------------------------
+La suppression d'un nœud demande de conserver la structure ordonnée. On nommera allégé un arbre binaire de recherche obtenu en ôtant un nœud.
+
+Il est relativement facile de supprimer un nœud terminal : on le remplace par une feuille.
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =17mm,scale=0.8]
+  \tikzstyle{level 1}=[sibling distance =5cm]
+  \tikzstyle{level 2}=[sibling distance =3 cm]
+  \tikzstyle{level 3}=[sibling distance =2 cm]
+  \tikzstyle{every node}=[circle,draw]
+  \node  {$22$}
+  child {node{$13$}
+          child {node{$11$}}
+          child {node{$18$}
+                  child {node{$16$}}
+                  child [fill=none] {edge from parent[draw=none]}
+                 }
+        }
+  child {node {$28$}
+         child [fill=none] {edge from parent[draw=none]}
+         child {node[rectangle, draw, fill=blue!75]{}}
+        };
+\end{tikzpicture}
+\caption{Suppression du nœud de clé 31 dans $a_0$}
+\end{figure*}
+
+Un autre cas simple est celui d'un nœud sans fils gauche (ou droit) : l'arbre allégé est obtenu en remplaçant ce nœud par son fils droit (ou gauche).
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =17mm,scale=0.8]
+  \tikzstyle{level 1}=[sibling distance =5cm]
+  \tikzstyle{level 2}=[sibling distance =3 cm]
+  \tikzstyle{level 3}=[sibling distance =2 cm]
+  \tikzstyle{every node}=[circle,draw]
+  \node  {$22$}
+  child {node{$13$}
+          child {node{$11$}}
+          child {node[fill=blue!75]{$16$}}
+        }
+  child {node {$28$}
+         child [fill=none] {edge from parent[draw=none]}
+         child {node{$31$}}
+        };
+\end{tikzpicture}
+\caption{Suppression du nœud de clé 18 dans $a_0$}
+\end{figure*}
+
+Le cas d'un nœud interne $n$ est plus délicat : on se ramène au cas de la racine; il suffira de remplacer le sous--arbre dont $n$ est la racine par l'arbre allégé.
+
+
+Pour ôter la racine d'un sous--arbre sans trop de modification on va choisir de le remplacer par un autre nœud de l'arbre. L'objectif est de minimiser le nombre de modifications : le nœud de clé maximale dans le fils gauche (ou de clé minimale dans le fils droit) est un bon choix car sa clé sépare les clés restantes. De plus ce nœud n'a pas de fils droit donc on le remplace facilement par son fils gauche.
+
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
+  \tikzstyle{level 1}=[sibling distance =10cm]
+  \tikzstyle{level 2}=[sibling distance =3 cm]
+  \tikzstyle{level 3}=[sibling distance =2 cm]
+  \tikzstyle{every node}=[circle,draw]
+  \node[fill=blue!75]{$22$}
+  child {edge from parent[draw=none] node{$13$}
+          child {node{$11$}}
+          child {node{$18$}
+                  child {node{$16$}}
+                  child [fill=none] {edge from parent[draw=none]}
+                 }
+        }
+  child {edge from parent[draw=none] node {$28$}
+         child [fill=none] {edge from parent[draw=none]}
+         child {node{$31$}}
+        };
+\end{tikzpicture}
+\caption{Suppression de la racine dans $a_0$}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
+  \tikzstyle{level 1}=[sibling distance =10cm]
+  \tikzstyle{level 2}=[sibling distance =3 cm]
+  \tikzstyle{level 3}=[sibling distance =2 cm]
+  \tikzstyle{every node}=[circle,draw]
+  \node[draw = none]{}
+  child {edge from parent[draw=none] node{$13$}
+          child {node{$11$}}
+          child {node[fill=red]{$18$}
+                  child {node{$16$}}
+                  child [fill=none] {edge from parent[draw=none]}
+                 }
+        }
+  child {edge from parent[draw=none] node {$28$}
+         child [fill=none] {edge from parent[draw=none]}
+         child {node{$31$}}
+        };
+\end{tikzpicture}
+\caption{Clé maximale du fils gauche}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
+  \tikzstyle{level 1}=[sibling distance =10cm]
+  \tikzstyle{level 2}=[sibling distance =3 cm]
+  \tikzstyle{level 3}=[sibling distance =2 cm]
+  \tikzstyle{every node}=[circle,draw]
+  \node[fill=red]{18}
+  child {edge from parent[draw=none] node{$13$}
+          child {node{$11$}}
+          child {node{$16$}}
+        }
+  child {edge from parent[draw=none] node {$28$}
+         child [fill=none] {edge from parent[draw=none]}
+         child {node{$31$}}
+        };
+\end{tikzpicture}
+\caption{Déplacement du maximum}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm,scale=0.8]
+  \tikzstyle{level 1}=[sibling distance =5cm]
+  \tikzstyle{level 2}=[sibling distance =3 cm]
+  \tikzstyle{level 3}=[sibling distance =2 cm]
+  \tikzstyle{every node}=[circle,draw]
+  \node{18}
+  child {node{$13$}
+          child {node{$11$}}
+          child {node{$16$}}
+        }
+  child {node {$28$}
+         child [fill=none] {edge from parent[draw=none]}
+         child {node{$31$}}
+        };
+\end{tikzpicture}
+\caption{Arbre allégé}
+\end{figure*}
+%--------------------------------
+
+On peut écrire les fonctions correspondantes
+%--------------------------------
+\begin{code}{Fonctions auxiliaires}
+let rec maxArbre arbre = 
+   match arbre with
+   |Vide -> failwith "Arbre vide"
+   |Noeud(g, r, Vide) -> r
+   |Noeud(g, r, d) -> maxArbre d;;
+
+let rec suppressionMax arbre = 
+   match arbre with
+   |Vide -> failwith "Arbre vide"
+   |Noeud(g, r, Vide) -> g
+   |Noeud(g, r, d) -> Noeud(g, r, suppressionMax d);;
+
+let suppressionRacine arbre = 
+   match arbre with
+   |Vide -> Vide
+   |Noeud(Vide, r, d) -> d
+   |Noeud(g, r, d) ->  let y = maxArbre g in
+                       Noeud(suppressionMax g, y, d);;
+\end{code}
+%--------------------------------
+On peut alors revenir au cas général.
+
+%--------------------------------
+\begin{code}{Suppression d'un nœud}
+let rec suppression k arbre = 
+   match arbre with
+   |Vide -> Vide
+   |Noeud(g, r, d) when cle r = k 
+                   -> suppressionRacine arbre
+   |Noeud(g, r, d) when k < cle r 
+                   -> Noeud((suppression k g), r, d)
+   |Noeud(g, r, d) -> Noeud(g, r, (suppression k d));;
+\end{code}
+%--------------------------------
+%--------------------------------
+\section{Application : dictionnaires}
+%--------------------------------
+%--------------------------------
+
+Lors de l'étude des structures abstraites nous avons définis les dictionnaires (ou tableaux associatifs) qui sont des structures de données abstraites où l'on stocke des éléments munis d'une clé.
+
+On travaillera donc  avec des éléments d'un type \type{'a * 'b} :
+
+\begin{itemize}
+    \item les premières composantes sont les {\bf clés}, leur type est muni d'une relation d'ordre total
+    \item les secondes composantes sont d'un type quelconque.
+\end{itemize}
+
+
+L'implémentation du type abstrait doit définir :
+%--------------------------------
+\begin{itemize}
+\item un type @'a * 'b dict@, on notera @'c@ le type @'a * 'b@,
+\item une fonction @creerDict : 'a ->  'b -> 'c dict@, qui construit un dictionnaire vide, les variables passées en paramètre donnent un exemple d'élément qui pourrait être dans le dictionnaire,
+
+\item une fonction @insertion : 'a -> 'b -> 'c dict -> unit@, qui insère un élément dans le dictionnaire,
+\item une fonction @defini : 'a -> 'c dict -> bool@ qui teste si une clé correspond à une entrée,
+\item une fonction @valeur : 'a -> 'c dict -> 'b@, qui retrouve, si elle existe, la valeur du dictionnaire associée à une clé,
+\item une fonction @retrait : 'a -> 'c dict -> unit@, qui élimine un élément défini par sa clé, 
+\end{itemize}
+%--------------------------------
+On remarquera que les fonctions ci-dessus correspondent à un type de données impératif : l'ajout ou le retrait d'un élément ne créent pas un nouveau dictionnaire.
+%--------------------------------
+%--------------------------------
+\subsection{Implémentations déjà vues}
+%--------------------------------
+%--------------------------------
+Nous avons déjà implémenté les dictionnaires à l'aide de listes d'associations, triées ou non triées? Les fonctions ne sont pas efficaces.
+
+Nous avons utilisé des tables de hachages pour implémenter cette structure : les différentes fonctions sont alors très efficaces. Cependant il est difficile dans ce cas d'énumérer les éléments, ou d'utiliser la relation d'ordre des clés, par exemple pour déterminer les éléments dont les clés sont comprises entre deux bornes.
+%--------------------------------
+%--------------------------------
+\subsection{Utilisation des arbres binaires de recherche}
+%--------------------------------
+%--------------------------------
+Un arbre binaire de recherche permet de rechercher, ajouter ou enlever les éléments avec une complexité en ${\cal O}(h)$ où $h$ est la hauteur de l'arbre dont on peut espérer qu'elle soit de l'ordre de $\ln(n)$ où $n$ est la taille de l'arbre.
+
+\begin{figure*}[h]
+\centering
+\begin{tikzpicture}[level distance =15mm]
+  \tikzstyle{level 1}=[sibling distance =4cm]
+  \tikzstyle{level 2}=[sibling distance =3cm]
+  \tikzstyle{level 3}=[sibling distance =2cm]
+  \tikzstyle{every node}=[rectangle,draw, rounded corners]
+  \node {$22$, "Léa"}
+  child {node{$13$, "Tom"}
+          child {node{$11$, "Jim"}}
+          child {node{$18$, "Luc"}
+                  child {node{$16$, "Ève"}}
+                  child [fill=none] {edge from parent[draw=none]}
+                 }
+        }
+  child {node{$28$,"Pol"}
+          child [fill=none] {edge from parent[draw=none]}
+          child {node{$31$, "Ida"}}
+        };
+\end{tikzpicture}
+\caption{Exemple de dictionnaire}
+\end{figure*}
+
+\newpage
+Comme on veut un type non persistant qui utilise un type persistant, les arbres binaires, on doit encapsuler les arbres dans une structure ; ce peut être un enregistrement mutable ou, ce qui revient au même, une référence.
+
+Les fonctions sont alors des adaptations.
+%--------------------------------
+\begin{code}{Implémentation de dictionnaires}
+type 'a*'b dict = 'a * 'b abr ref;;
+
+let cle = snd;;
+
+let creerDict k v = ref Vide;;
+
+let insertion k v dico =
+    dico := insertionRacine (k, v) !dico;;
+    
+let defini k dico
+  = chercher k !dico;;
+   
+let rec valeur k dico = 
+  noeud k !dico;;
+
+let retrait k dico = 
+  dico := suppression k !dico;;
+\end{code}
+%--------------------------------
+%--------------------------------
+\newpage
+%--------------------------------
+\section{Exercices}
+%--------------------------------
+%--------------------------------
+\begin{Exercise}[title =Une caractérisation]\it
+Prouver qu'un arbre binaire est un arbre binaire de recherche si et seulement si le parcours {\bf infixe} des clés de l'arbre donne une suite strictement croissante.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+{\bf Sens inverse}
+
+On suppose que le parcours infixe lit les clés dans l'ordre croissant
+
+Pour tout sous--arbre les clés du fils gauche sont lues par le parcours infixe avant la clé de la racine donc, comme le parcours est croissant, les clés du fils gauche sont inférieures à celle de la racine. 
+
+De même les clés du fils droit sont supérieures à celle de la racine.
+
+L'arbre est donc bien un A.B.R.
+
+{\bf Sens direct}
+
+
+On vérifie la réciproque par récurrence sur la hauteur.
+
+\begin{itemize}
+\item C'est évident pour un sous--arbre de hauteur 0.
+
+\item Si c'est vrai pour tous les arbres de hauteur $p$ au plus.
+Les  fils droit et gauche  d'un arbre de hauteur $p+1$ ont une hauteur inférieure ou égale à $p$. Le parcours infixe de $T$ se fait en parcourant le fils gauche, qui donne des clés croissantes par hypothèse de récurrence, puis en lisant la clé de la racine, supérieure aux précédentes, puis en parcourant le fils droit, toujours en croissant.
+Le parcours infixe est croissant.
+
+\end{itemize}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Parcours infixe]\it
+Écrire une fonction de complexité linéaire qui renvoie  les éléments d'un arbre binaire de recherche dans une liste croissante.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Il faut éviter d'utiliser la concaténation des listes qui donnera une complexité en $n\ln(n)$, voire en $n^2$ si l'arbre n'est pas équilibré. On va donc utiliser une fonction auxiliaire qui accumule les valeurs des nœuds à une liste passée en paramètre. On devra alors commencer par le fils droit.
+\begin{ocaml}
+let liste_of_arbre arbre =
+  let rec aux a vu =
+      match a with
+      |Vide -> vu
+      |Noeud(g, r, d) -> aux g (r::(aux d vu))
+  in aux arbre [];;
+\end{ocaml}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title = Remplissage d'un arbre]\it
+Écrire une fonction @arbre_of_liste@ qui crée un arbre à partir d'une liste en ajoutant un-par-un les éléments de la liste à un arbre vide.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{ocaml}
+let arbre_of_liste liste =
+  let rec aux l fait =
+      match l with
+      |[] -> fait
+      |t::q -> aux q (insertionF t fait)
+  in aux liste Vide;;
+\end{ocaml}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Tri]\it
+Comment peut-on utiliser les arbres binaires de recherche pour effectuer un tri ?
+
+Si on admet que la hauteur moyenne d'un arbre binaire de recherche de taille $n$ est un ${\cal O}\bigl(\log_2(n)\bigr)$ déterminer la complexité, en moyenne, de ce tri.
+
+Écrire une fonction de tri de liste utilisant cette méthode.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+
+L'arbre sert de réservoir qui trie tout seul les éléments qu'on lui ajoute.
+
+\begin{itemize}
+\item On insère (dans le désordre) les éléments à trier dans un arbre à partir de l'arbre vide.
+
+\item On lit l'arbre dans un parcours infixe : la liste est triée.
+
+\end{itemize}
+
+La complexité des insertions est de l'ordre de $\displaystyle \sum_{i=1}^{n-1} \ln(i)\le n\log_2(n)$.
+
+Le parcours est de complexité linéaire donc le tri est un ${\cal O}\bigl(n\log_2(n)\bigr)$.
+
+\begin{ocaml}
+let tri_ABR liste =
+  liste_of_arbre (arbre_of_liste liste);;
+\end{ocaml}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Parcours de recherche]\it
+
+On suppose que tous les nombres de 1 à 800 sont les clés d'un 
+arbre binaire de recherche. Parmi les suites suivantes lesquelles ne peuvent pas être les clés d'un parcours de recherche de 417 ?
+
+\begin{itemize}
+
+\item 222, 457, 122, 217, 417
+
+\item 601, 403, 555, 408, 523, 411, 466, 417
+
+\item 601, 403, 555, 408, 563, 411, 466, 417
+
+\item 901, 403, 555, 411, 466, 417
+\end{itemize}
+
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Le principe est que si on suit un arbre binaire de recherche $u_0, u_1, \ldots, u_p$ $u_{i+1} > u_i$ impose $u_j > u_i$ pour tout $j>i$.
+
+
+\begin{itemize}
+\item 122 n'est pas possible après 222, 457
+
+\item 545, 215, 333, 401, 422, 417 est possible 
+
+
+\item 601, 403, 555, 408, 523, 411, 466, 417 est possible
+
+
+\item 563 n'est pas possible après 601, 403, 555, 408
+
+
+\item 901, 403, 555, 411, 466, 417 est possible
+\end{itemize}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Vérification]\it
+
+Écrire une fonction qui teste si l'arbre binaire passé en paramètre est un arbre binaire de recherche.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\type{Noeud(g, r, d)} est un arbre binaire de recherche si 
+
+ \type{g} et \type{d} sont des arbres binaires de recherche,
+
+ le maximum des clés de \type{g} est strictement inférieur à $n$,
  
-%  le minimum des clés de \type{d} est strictement supérieur à $n$.
+ le minimum des clés de \type{d} est strictement supérieur à $n$.
  
-%  On peut calculer les maximums et minimums par des fonctions auxiliaire mais cela revient à parcourir tout l'arbre plusieurs fois. On va tout calculer d'un coup.
+ On peut calculer les maximums et minimums par des fonctions auxiliaire mais cela revient à parcourir tout l'arbre plusieurs fois. On va tout calculer d'un coup.
  
-%  L'arbre vide n'a pas de maximum, on le remplace par l'entier minimum : tout entier lui sera supérieur. De même le minimum de l'arbre vide sera choisi comme l'entier maximum.
-% %--------------------------------
-% \begin{lstlisting}
-% let estABR arbre = 
-%   let rec aux a =
-%     match a with
-%     |Vide -> (max_int, true, min_int)
-%     |Noeud(g, r, d) -> let (m1, b1, M1) = aux g in 
-%                       let (m2, b2, M2) = aux d in
-%                       (m1, b1 && b2 && (M1 < cle r) && (cle r < m2), M2)
-%   in let (_,b,_) = aux arbre in b;;
-% \end{lstlisting}
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Tranche}
+L'arbre vide n'a pas de maximum, on le remplace par l'entier minimum : tout entier lui sera supérieur. De même le minimum de l'arbre vide sera choisi comme l'entier maximum.
+%--------------------------------
+\begin{ocaml}
+let estABR arbre = 
+  let rec aux a =
+      match a with
+      |Vide -> (max_int, true, min_int)
+      |Noeud(g, r, d) -> let (min1, b1, max1) = aux g in 
+                         let (min2, b2, max2) = aux d in
+                         let k = cle r in
+                         (min1, 
+                          b1 && b2 && (max1 < k) && (k < min2), 
+                          max2)
+  in let (_,b,_) = aux arbre in b;;
+\end{ocaml}
 
-% Écrire une fonction \type{tranche arbre a b} qui reçoit comme paramètre un arbre binaire de recherche et deux entiers et qui renvoie un arbre binaire de recherche dont les clés son les clés de \type{arbre} comprises entre \type{a} et \type{b}.
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse 
-% \begin{lstlisting}
-% let rec tranche arbre a b = 
-%   match arbre with
-%   |Vide -> Vide
-%   |Noeud(g, r, d) when cle r < a -> tranche d a b
-%   |Noeud(g, r, d) when cle r > b -> tranche g a b
-%   |Noeud(g, r, d) -> Noeud(tranche g a b, r, tranche d a b);;
-% \end{lstlisting}
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Tri }
+On peut aussi choisir de traiter à part le cas de l'arbre vide et de séparer les nœuds selon le nombre de fils vides.
+%--------------------------------
+\begin{ocaml}
+let estABR arbre = 
+  let rec aux a =
+      match a with
+      |Vide -> (0, true, 0)
+      |Noeud(Vide, r, Vide) -> let k = cle r in (k, true, k)
+      |Noeud(Vide, r, d) ->  let (min2, b2, max2) = aux d in
+                             let k = cle r in
+                             (k, b2 && (k < min2), max2)
+      |Noeud(g, r, Vide) -> let (min1, b1, max1) = aux g in 
+                            let k = cle r in
+                            (min1, b1 && (max1 < k), k)
+      |Noeud(g, r, d) -> let (min1, b1, max1) = aux g in 
+                         let (min2, b2, max2) = aux d in
+                         let k = cle r in
+                         (min1, 
+                          b1 && b2 && (max1 < k) && (k < min2), 
+                          max2)
+  in let (_,b,_) = aux arbre in b;;
+\end{ocaml}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Tranche]\it
+Écrire une fonction \type{tranche arbre a b} qui reçoit comme paramètre un arbre binaire de recherche et deux entiers et qui renvoie un arbre binaire de recherche dont les nœuds sont les nœuds de l'arbre initial qui leur clé  comprise entre \type{a} et \type{b}.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+\begin{ocaml}
+let rec tranche arbre a b = 
+   match arbre with
+   |Vide -> Vide
+   |Noeud(g, r, d) when cle r < a -> tranche d a b
+   |Noeud(g, r, d) when cle r > b -> tranche g a b
+   |Noeud(g, r, d) -> Noeud(tranche g a b, r, tranche d a b);;
+\end{ocaml}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Fusion]
+Écrire une fonction {\tt Fusion a b} qui joint deux 
+arbres binaires de recherche ; on pourra utiliser les fonctions de coupure d'un arbre binaire de recherche.
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
+Si le premier arbre est non vide on coupe le second selon la racine du premier et on ajoute les morceaux aux deux fils.
+%--------------------------------
+\begin{ocaml}
+let rec fusion arbre1 arbre2 =
+   match arbre1 with
+   |Vide -> arbre2
+   |Noeud(g, r, d) -> let (pt, gd) = decoupage (cle r) arbre2 in
+                      Noeud(fusion g pt, r, fusion d gd);;
+\end{ocaml}
+%--------------------------------
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Ancêtre commun]
+Un ancêtre commun de deux nœuds $n_1$ et $n_2$ d'un arbre homogène est un nœud dont $n_1$ et $n_2$ sont descendants ; en particulier la racine est toujours un ancêtre commun de toute paire de nœuds.
 
-% Comment peut-on utiliser les arbres binaires de recherche pour effectuer un tri ?
+\begin{itemize}
+\item Montrer que, pour tout entier $h$, deux nœuds $n_1$ et $n_2$ admettent au plus un ancêtre commun à la profondeur $h$.
 
-% Si on admet que la hauteur moyenne d'un arbre binaire de recherche de taille $n$ est un ${\cal O}\bigl(\log_2(n)\bigr)$ déterminer la complexité, en moyenne, de ce tri.
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse L'arbre sert de réservoir qui trie tout seul les éléments qu'on lui ajoute.
+\medskip
 
-% \begin{itemize}
-% \item On insère (dans le désordre) les éléments à trier dans un arbre à partir de l'arbre vide.
+On appelle {\bf plus proche ancêtre commun}, noté PPAC,  de $n_1$ et $n_2$ leur ancêtre commun de profondeur maximale.
 
-% \item On lit l'arbre dans un parcours infixe : la liste est triée.
+D'après le résultat ci-dessus le plus proche ancêtre commun est unique.
 
-% \end{itemize}
+\medskip
 
-% La complexité des insertions est de l'ordre de $\displaystyle \sum_{i=1}^{n-1} \ln(i)\le n\log_2(n)$.
+\item Prouver que les ancêtres communs de $n_1$ et $n_2$ sont les ancêtres de leur PPAC.
 
-% Le parcours est de complexité linéaire donc le tri est un ${\cal O}\bigl(n\log_2(n)\bigr)$.
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Fusion}
+\item $n_1$ et $n_2$ sont deux nœuds d'un arbre. Prouver que leur PPAC est
+\begin{itemize}
+\item $n_1$, si $n_2$ est un descendant de $n_1$,
+\item $n_2$, si $n_1$ est un descendant de $n_2$,
+\item l'unique nœud $n$ de l'arbre tel que $n_1$ appartient au fils gauche (resp. fils droit) de $n$ et $n_2$ appartient au fils droit (resp. fils gauche) de $n$ dans les autres cas.
+\end{itemize}
 
-% Écrire une fonction {\tt Fusion a b} qui joint deux 
-% arbres binaires de recherche ; on pourra utiliser les fonctions de coupure d'un arbre binaire de recherche.
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse Si le premier arbre est non vide on coupe le second selon la racine du premier et on ajoute les morceaux aux deux fils.
-% %--------------------------------
-% \begin{lstlisting}
-% let rec fusion arbre1 arbre2 =
-%   match arbre1 with
-%   |Vide -> arbre2
-%   |Noeud(g, r, d) -> let (pt, gd) = decoupage (cle r) arbre2 in
-%                         Noeud(fusion g pt, r, fusion d gd);;
-% \end{lstlisting}
-% %--------------------------------
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Ancêtre commun}
-
-% Un ancêtre commun de deux nœuds $n_1$ et $n_2$ d'un arbre homogène est un nœud dont $n_1$ et $n_2$ sont descendants ; en particulier la racine est toujours un ancêtre commun de toute paire de nœuds.
-
-% \begin{itemize}
-% \item Montrer que, pour tout entier $h$, deux nœuds $n_1$ et $n_2$ admettent au plus un ancêtre commun à la profondeur $h$.
-
-% \medskip
-
-% On appelle {\bf plus proche ancêtre commun}, noté PPAC,  de $n_1$ et $n_2$ leur ancêtre commun de profondeur maximale.
-
-% D'après le résultat ci-dessus le plus proche ancêtre commun est unique.
-
-% \medskip
-
-% \item Prouver que les ancêtres communs de $n_1$ et $n_2$ sont les ancêtres de leur PPAC.
-
-% \item $n_1$ et $n_2$ sont deux nœuds d'un arbre. Prouver que leur PPAC est
-% \startitemize[n,joinedup]
-% \item $n_1$, si $n_2$ est un descendant de $n_1$,
-% \item $n_2$, si $n_1$ est un descendant de $n_2$,
-% \item l'unique nœud $n$ de l'arbre tel que $n_1$ appartient au fils gauche (resp. fils droit) de $n$ et $n_2$ appartient au fils droit (resp. fils gauche) de $n$ dans les autres cas.
-% \end{itemize}
-
-% \item En déduire l'écriture d'une fonction qui permet de déterminer le PPAC de deux nœuds d'un A.B.R.
-% \end{itemize}
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse 
+\item En déduire l'écriture d'une fonction qui permet de déterminer le PPAC de deux nœuds d'un A.B.R.
+\end{itemize}
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
 % \begin{itemize}
 % \item Deux nœuds de même profondeur définissent deux sous-arbres disjoints : ils ne peuvent donc pas être en même temps ancêtres communs de $n_1$ et $n_2$.
 
@@ -890,22 +932,20 @@ let rec insertionF x arbre =
 
 % \item 
 % %--------------------------------
-% \begin{lstlisting}
+% \begin{ocaml}
 % let rec ppac arbre p q =
 %   match arbre with
 %   |Vide -> failwith "Les elements ne sont pas dans l'arbre"
 %   |Noeud(g, n, x, d) when n < p && n < q -> ancetreCommun d p q
 %   |Noeud(g, n, x, d) when n > p && n > q -> ancetreCommun g p q
 %   |Noeud(g, n, x, d) -> n, x;;
-% \end{lstlisting}
+% \end{ocaml}
 % %--------------------------------
 % \end{itemize}
-% \stopreponse
-% \newpage
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Successeurs et prédécesseurs}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Successeurs et prédécesseurs]
 
 % On considère les nœuds d'un arbre binaire de recherche $a$
 
@@ -921,11 +961,9 @@ let rec insertionF x arbre =
 % soit $a$ est le nœud de clé maximale dans le fils gauche de $b$. 
 
 % \item Écrire un algorithme calculant la plus petite clé strictement supérieure à une valeur $k$ donnée dans un arbre binaire de recherche. Cela permet de calculer le successeur d'un nœud de clé $k$.
-% \end{itemize}
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
 % \begin{itemize}
 % \item Comme le parcours infixe visite un nœud juste après son fils gauche on en déduit que le prédécesseur appartient au fils gauche.
 
@@ -957,17 +995,17 @@ let rec insertionF x arbre =
 
 % \item On commence par le minimum d'un arbre
 % %--------------------------------
-% \begin{lstlisting}
+% \begin{ocaml}
 % let rec minArbre arbre = 
 %   match arbre with
 %   |Vide -> failwith "Arbre vide"
 %   |Noeud(Vide, r, d) -> cle r
 %   |Noeud(g, r, d) -> minArbre g;;
-% \end{lstlisting}
+% \end{ocaml}
 % %--------------------------------
 
 % %--------------------------------
-% \begin{lstlisting}
+% \begin{ocaml}
 % let rec suivant k arbre =
 %   match arbre with
 %   |Vide -> failwith "Les clé sont trop petites"
@@ -977,14 +1015,13 @@ let rec insertionF x arbre =
 %   |Noeud(g, r, d) when maxArbre g <= k -> cle r
 %   |Noeud(g, r, d) -> suivant k g;;
 % ;;
-% \end{lstlisting}
+% \end{ocaml}
 % %--------------------------------
 % \end{itemize}
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Préfixes d’un arbre binaire}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Préfixes d’un arbre binaire]
 
 % On dit qu’un arbre binaire {\tt t} est un préfixe d’un arbre binaire {\tt t1} si {\tt t} est l’arbre vide ou si {\tt t = Noeud(g,k,d)} et {\tt t1 = Noeud(g1,k,d1)} avec {\tt g} prefixe de {\tt g1} et {\tt d} prefixe de {\tt d1}.
 
@@ -995,10 +1032,9 @@ let rec insertionF x arbre =
 
 % \item Écrire une fonction testant si un arbre binaire est préfixe d’un autre.
 % \end{itemize}
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
 % \begin{itemize}
 % \item Réflexivité et transitivité sont immédiates.
 
@@ -1008,20 +1044,19 @@ let rec insertionF x arbre =
 
 % \item 
 % %--------------------------------
-% \begin{lstlisting}
+% \begin{ocaml}
 % let rec est_prefixe a1 a2 =
 %   match a1, a2 with
 %   |Vide, _ -> true
 %   |Noeud(g1, r1, d1), Noeud(g2, r2, d2) when r1 = r2
 %                   -> (est_prefixe g1 g2) && (est_prefixe d1 d2)
 %   |_ -> false;;
-% \end{lstlisting}
+% \end{ocaml}
 % \end{itemize}
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Nombre de constructions}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Nombre de constructions]
 
 % Déterminer tous les ordres possibles d'insertion de clés à partir de l'arbre vide qui donnent l'arbre suivant par adjonction aux feuilles
 
@@ -1048,10 +1083,9 @@ let rec insertionF x arbre =
 
 
 % Plus généralement montrer que le nombre de permutations des clés d'un arbre $T$, de taille $n$, qui engendrent l'arbre par adjonctions successives aux feuilles est $n!$ divisé par le produit des tailles de tous les sous--arbres (y compris $T$) de $T$.
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
 % Les ordres d'insertions possibles sont :
 % 6, 4, 2, 3, 8, 7
 
@@ -1111,11 +1145,10 @@ let rec insertionF x arbre =
 % La propriété est encore vraie pour $T$, c'est-à-dire pour tous les arbres de taille $n$.
 
 % On a prouvé la récurrence.
-% \stopreponse
-% \endrep
-% %--------------------------------------------------------------------------
-% %--------------------------------------------------------------------------
-% \startexo{\bf Complexité moyenne d'une recherche}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title =Complexité moyenne d'une recherche]
 
 % On considère les arbres binaires de recherche construits en ajoutant à l'arbre vide les nœuds de clé 1 à $n$ dans le désordre.
 
@@ -1139,11 +1172,9 @@ let rec insertionF x arbre =
 
 % \item Prouver que $a_n={\cal O}\bigl(\log_2(n)\bigr)$, {\it on pourra poser $u_n=\frac n{n+1}a_n$}.
 
-% \end{itemize}
-% \stopexo
-% %--------------------------------------------------------------------------
-% \beginrep[exosABR]
-% \startreponse 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
 % \begin{itemize}
 % \item Il y a $(n-1)!$ permutations telles que l'image du premier terme soit $i$ car on doit ensuite choisir une permutation des $n-1$ termes restants. La probabilité que le premier terme soit $i$ est donc $\frac{(n-1)!}{n!}=\frac 1n$ : la probabilité est uniforme.
 
@@ -1218,51 +1249,48 @@ let rec insertionF x arbre =
 
 % Ainsi $\displaystyle a_n = \frac{4(n+1)}n\sum_{k=1}^n \frac 1k -7\eq 4\ln(n)$.
 % \end{itemize}
-% \stopreponse
-% \endrep
-%--------------------------------------------------------------------------
-%------------------------------------------------------------
-%\startexo {Implémentations d'ensembles}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{Exercise}[title=Implémentations d'ensembles]
 %
 %Implémenter une structure d'ensemble mutable à l'aide d'arbres binaires de recherche : il faudra définir le 
 %type et les fonctions \type{ensembleVide, estVide, appartient, inserer, retirer}.
-%\stopexo
-%%--------------------------------------------------------------------------
-%\beginrep[exosABR]
-%\startreponse 
+\end{Exercise}
+%-------------------------------------------------------------------------------
+\begin{Answer}
 %La structure d'arbre n'est pas mutable : chaque fonction construit un nouvel arbre. Nous allons donc encapsuler un arbre, comme nous avons fait pour les files et les piles.
 %
 %%--------------------------------
-%\begin{lstlisting}
+%\begin{ocaml}
 %type 'a ensemble = {mutable contenu : 'a abr};;
-%\end{lstlisting}
+%\end{ocaml}
 %%--------------------------------
 %
 %Les fonctions sont alors directement les traductions des fonctions sur les arbres.
 %
 %%--------------------------------
-%\begin{lstlisting}
+%\begin{ocaml}
 %let ensembleVide () = {contenu = Vide};;
-%\end{lstlisting}
+%\end{ocaml}
 %%--------------------------------
-%\begin{lstlisting}
+%\begin{ocaml}
 %let estVide ens = ens.contenu = Vide;;
-%\end{lstlisting}
+%\end{ocaml}
 %%--------------------------------
-%\begin{lstlisting}
+%\begin{ocaml}
 %let appartient x ens  = (chercher x ens.contenu);;
-%\end{lstlisting}
+%\end{ocaml}
 %%--------------------------------
-%\begin{lstlisting}
+%\begin{ocaml}
 %let inserer x ens  = 
 %  ens.contenu <- ajouterRacine x ens.contenu;;
-%\end{lstlisting}
+%\end{ocaml}
 %%--------------------------------
-%\begin{lstlisting}
+%\begin{ocaml}
 %let retirer x ens  = 
 %  ens.contenu <- suppression x ens.contenu;;
-%\end{lstlisting}
-%\stopreponse
-%\endrep
-%--------------------------------
-%--------------------------------
+%\end{ocaml}
+\end{Answer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
