@@ -1,0 +1,235 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{Programmation fonctionnelle}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Nous avons rencontré en première année des situations où on répétait le même type de construction qui utilisait une fonction et une liste. 
+
+L'exemple le plus courant est l'application d'une fonction aux éléments d'une liste :
+
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let rec double liste =
+   match liste with
+   |[] -> []
+   |t::q -> (2*t) :: (double q);; 
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let rec parite liste =
+   match liste with
+   |[] -> []
+   |t::q -> (t mod 2 = 0) :: (parite q);; 
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+
+Ce motif d'algorithme peut être factorisé à l'aide d'une méta-fonction dont les paramètres sont une fonction et une liste.
+
+Nous allons définir quelques motifs et les méta-fonctions correspondantes.
+
+Le code des fonctions est adapté de celui trouvé dans le fichier \type{list.ml}.
+
+Les codes ne sont pas très compliqués et il est peut être plus utile de comprendre la structure utilisée plutôt que d'utiliser aveuglément les fonctions.
+En particulier, il est nécessaire de pouvoir traduire les idées utilisées ici dans le cas d'autres types récursifs comme les arbres ou les graphes.
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Application d'une fonction à une liste}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+On cherche à appliquer, {\sc mapper} en anglais, une fonction à une liste :
+%-------------------------------------------------------------------------------
+\begin{code}{Fonction \type{map}}
+let rec map f liste = 
+   match liste with
+   |[] -> []
+   |t::q -> (f t) :: (map f q);;
+   
+map : ('a -> 'b) -> 'a list -> 'b list
+\end{code}
+%-------------------------------------------------------------------------------
+\newpage
+Les fonctions ci-dessus peuvent s'écrire
+
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let double = List.map (fun x -> 2*x);;
+
+let parite = List.map (fun x -> x mod 2 = 0);;
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Itération d'une fonction sur une liste}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Si une fonction a un résultat de type \type{unit}, on peut l'appliquer  successivement à  tous les éléments d'une liste,  %-------------------------------------------------------------------------------
+\begin{code}{Fonction \type{iter}}
+let rec iter f liste = 
+   match liste with
+   |[] -> ()
+   |t::q -> (f t);
+            iter f q;;
+   
+iter : ('a ->unit) -> 'a list -> unit
+\end{code}
+%-------------------------------------------------------------------------------
+
+C'est la structure semblable à une boucle \type{for} pour les listes. 
+
+Comme on n'autorise que des fonctions à résultat \type{unit}, on procède ici par effets de bords, ce n'est plus vraiment de la programmation fonctionnelle.
+%-------------------------------------------------------------------------------
+\subsubsection{Impression de liste}
+%-------------------------------------------------------------------------------
+
+\begin{ocaml}
+let sortie k =
+   print_int k;
+   print_string " ";;
+
+let imprimer_liste l = 
+    List.iter sortie l;
+    print_newline ();;
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+On ne peut pas remplacer la fonction \type{sortie} par une fonction anonyme (\type{fun x -> ...}) car il y a plusieurs instructions successives.
+%-------------------------------------------------------------------------------
+\subsubsection{Somme des éléments d'une liste}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let somme_liste l =
+   let s = ref 0 in
+   List.iter (fun x -> s := !s + x) l;
+   !s;;
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\section{Itération cumulative d'une fonction sur une liste}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Le calcul de la somme ci-dessus revient à écrire
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let somme_liste l =
+   let s = ref 0 in
+   let rec aux a_faire =
+      match a_faire with
+      |[] -> ()
+      |t::q -> s := !s + t;
+               aux q in
+   aux l;
+   !s;;
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+Ce n'est pas un algorithme récursif lisible.
+On aurait plutôt écrit
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let rec somme_liste l =
+   match l with
+   |[] -> 0
+   |t::q -> t + somme_liste q;;
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+
+Pour une liste $[a_1; a_2; \ldots ; a_n]$, on a calcule
+$a_1 + \Bigl(a_2 + \bigl(\cdots + (a_n + 0)\cdots\bigl)\Bigl)$.
+
+En définissant \type{let f x y = x+y;;} on a calculé
+$f \ a_1\ \Bigl(f\ a_2\ \bigl(\cdots (f\ a_n\ 0)\cdots\bigl)\Bigl)$.
+
+De manière générale on retrouve souvent le calcul
+\type{f a1 (f a2 (... (f an b0)...)}.
+%-------------------------------------------------------------------------------
+\begin{code}{Fonction \type{fold\_right}}
+let rec fold_right f liste b0 =
+   match liste with
+   |[] -> b0
+   |t::q -> f t (fold_right f q b0);;
+
+fold_right : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
+\end{code} 
+%-------------------------------------------------------------------------------
+\subsubsection{Somme des éléments d'une liste}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let somme_liste l = 
+   List.fold_right (fun x y -> x + y) l 0;;
+\end{ocaml}
+%-------------------------------------------------------------------------------
+\subsubsection{Sucre syntactique}
+%-------------------------------------------------------------------------------
+Un opérateur infixe comme \type{+, *, ...} peut être transformé en fonction de 2 variables en l'encadrant par des parenthèses : \type{(+), (*), ...}.
+%-------------------------------------------------------------------------------
+\subsubsection{Produit des termes d'une liste}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let somme_liste l = 
+   List.fold_right (*) l 1;;
+\end{ocaml}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\section{Autre itération cumulative}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Une écriture récursive terminale de la somme des termes d'une liste peut être
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let somme_liste l =
+   let rec aux reste fait =
+      match reste with
+      |[] -> fait
+      |t::q -> aux q (fait + t) in
+   aux l 0;;
+\end{ocaml} 
+%-------------------------------------------------------------------------------
+On a calculé $\Bigl(\cdots \bigl(( 0 + a_1)\ +a_2\bigr)\cdots + a_n\Bigr)$. De manière générale on retrouve souvent le calcul
+\type{f (...f (f a0 b1) b2) ...) bn} ; ici on avait \type{ f = (+)}.
+
+C'est ce que permet la meta-fonction
+%-------------------------------------------------------------------------------
+\begin{code}{Fonction \type{fold\_left}}
+let rec fold_left f accu liste =
+   match liste with
+   |[] -> accu
+   |t::q -> fold_left f (f accu t) q;;
+
+fold_right : ('b -> 'a -> 'b) -> 'b -> 'a list -> 'b 
+\end{code} 
+%-------------------------------------------------------------------------------
+Cette fonction est distincte de \type{fold\_right} dans le cas où la fonction n'est pas associative.
+%-------------------------------------------------------------------------------
+\subsubsection{Somme des éléments d'une liste}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let somme_liste l = 
+   List.fold_left (+) 0 l;;
+\end{ocaml}
+%-------------------------------------------------------------------------------
+\subsubsection{Conversion d'une liste en chaîne}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let chaine l = 
+   List.fold_left (fun ch k -> ch^(string_of_int k) "" l;;
+\end{ocaml}
+%-------------------------------------------------------------------------------
+\subsubsection{Appartenance à une liste}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let appartient k l = 
+   List.fold_left (fun rep t -> t=k || rep) false l;;
+\end{ocaml}
+%-------------------------------------------------------------------------------
+\subsubsection{Dernier élément d'une liste}
+%-------------------------------------------------------------------------------
+\begin{ocaml}
+let dernier l =
+   match l with
+   |[] -> None
+   |t::q -> Some(List.fold_left (fun x y -> y) t q);;
+\end{ocaml}
+%-------------------------------------------------------------------------------

@@ -9,12 +9,17 @@
 \usepackage[french]{babel}
 % frenchb change les points en tirets, retour à l'original :
 \frenchbsetup{ItemLabeli=$\bullet$}
+% \usepackage{polyglossia}
+% \setdefaultlanguage{french}
 %-------------------------------------------------------------------------- 
 %-------------------------------------------------------------------------- 
 % Fontes
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
+
+% \usepackage{fontspec}
+% \usepackage{lmodern}
+
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % Utilitaires
@@ -31,7 +36,10 @@
 \usepackage{wrapfig}%Figures sur les côtés
 %--------------------------------------------------------------------------
 \usepackage{tikz}%Pour les dessins divers (arbres, graphes...)
-\usetikzlibrary{calc, positioning, patterns ,babel, shapes, automata}
+\usetikzlibrary{calc, positioning, patterns, babel, shapes, automata, 
+%                graphs, graphdrawing
+               }
+%\usegdlibrary{trees}
 \usepackage[european, cuteinductors, EFvoltages]{circuitikz}
 %-------------------------------------------------------------------------- 
 %--------------------------------------------------------------------------
@@ -42,13 +50,15 @@
 %--------------------------------------------------------------------------
 % En-tête de chapitre
 \usepackage[explicit]{titlesec}
-\titleformat{\chapter}[display]{\Large\bfseries}
+\titleformat{\chapter}
+            [display]
+            {\Large\bfseries}
             {\filright {\chaptername}\ \huge\thechapter }{0pt}
             {\titlerule \vspace{2ex}
              \filleft\sffamily\bfseries
-               {\fontsize{40}{45}\usefont{T1}{qcs}{m}{sc}\selectfont #1}
-            }
+             {\fontsize{40}{45}\usefont{T1}{qcs}{m}{sc}\selectfont #1}}
             [\vspace{2ex}\titlerule]
+            
 \titlespacing*{\chapter}{0pt}{0pt}{3cm}
 %--------------------------------------------------------------------------
 %Liens
@@ -97,57 +107,53 @@
 \setcounter{tocdepth}{1}   
 %--------------------------------------------------------------------------
 % Définition de la page de titre
-\def\premierePage{\begin{titlepage}
-              {\scshape\LARGE Lycée Faidherbe, \annee \par}
-              \vspace{3cm}
-              \begin{center}
-                  \rule{\linewidth}{0.5mm}
-                  \vskip -2cm
-                  \rule{\linewidth}{1.5mm}
-                  {\fontsize{60}{65}\usefont{T1}{qcs}{m}{sc}\selectfont \titre\par}
-                  \rule{\linewidth}{1.5mm}
-                  \vskip -2mm
-                  \rule{\linewidth}{0.5mm}
-                  
-                  \vspace{3cm}
-                  {\Large\bf \classe}
-              \end{center}
-              \vfill
-              {\large Version du \today\par}
-           \end{titlepage}
-          }
+\def\premierePage{\begin{titlepage}{\scshape\LARGE Lycée Faidherbe, \annee \par}
+                                    \vspace{3cm}
+                                    \begin{center}
+                                    \rule{\linewidth}{0.5mm}
+                                    \vskip -2cm
+                                    \rule{\linewidth}{1.5mm}
+                                    {\fontsize{60}{65}\usefont{T1}{qcs}{m}{sc}\selectfont \titre\par}
+                                
+                                    \vskip 6mm
+                                    \rule{\linewidth}{1.5mm}
+                                    \vskip -2mm
+                                    \rule{\linewidth}{0.5mm}
+                                    \vskip 4cm
+                                    {\LARGE\bf \classe}
+                                    \end{center}
+                                    \vfill
+                                    {\large Version du \today\par}
+                  \end{titlepage}
+                 }
 %-------------------------------------------------------------------------- 
 %--------------------------------------------------------------------------
 % Composants
-%-------------------------------------------------------------------------- 
+% %-------------------------------------------------------------------------- 
+% %--------------------------------------------------------------------------
+% %Pour mettre en page des exercices facilement 
+% \usepackage[answerdelayed,lastexercise]{exercise}
+% \renewcommand{\ExerciseName}{Exercice}
+% \renewcommand{\ExerciseHeaderTitle}{\ ---\quad\textbf{\textsc{\ExerciseTitle}}}
+% \renewcommand{\ExerciseHeader}{\vspace{0cm}\noindent
+%                               \textbf{\ExerciseName\ \ExerciseHeaderNB}\ 
+%                               \ExerciseHeaderDifficulty
+%                               \ExerciseHeaderTitle\par
+%                               }
+% \renewcommand{\AnswerHeader}{\noindent\textbf{Solution de l'exercice \ExerciseHeaderNB{} - }} 
+% % \numberwithin{Answer}{chapter}
+% % \numberwithin{Exercise}{chapter}
+% \renewcounter{Exercise}[chapter]
+% \setlength{\ExerciseSkipBefore}{0.6\baselineskip}
+% \setlength{\ExerciseSkipAfter}{0.6\baselineskip}
 %--------------------------------------------------------------------------
-%Pour mettre en page des exercices facilement 
-\usepackage[answerdelayed,lastexercise]{exercise}
-\renewcommand{\ExerciseName}{Exercice}
-\renewcommand{\ExerciseHeaderTitle}{\ ---\quad\textbf{\textsc{\ExerciseTitle}}}
-\renewcommand{\ExerciseHeader}{\vspace{0cm}\noindent
-                               \textbf{\ExerciseName\ \ExerciseHeaderNB}\ 
-                               \ExerciseHeaderDifficulty
-                               \ExerciseHeaderTitle\par
-                              }
-\renewcommand{\AnswerHeader}{\noindent\textbf{Solution de l'exercice \ExerciseHeaderNB{} - }} 
-% \numberwithin{Answer}{chapter}
-% \numberwithin{Exercise}{chapter}
-\renewcounter{Exercise}[chapter]
-\setlength{\ExerciseSkipBefore}{0.6\baselineskip}
-\setlength{\ExerciseSkipAfter}{0.6\baselineskip}
-%--------------------------------------------------------------------------
-% Configuration des listings
+% Le package pour la déco
+\usepackage[skins, listings, theorems, xparse, breakable]{tcolorbox}
 \definecolor{mon_orange}{RGB}{165,75,0}
 \definecolor{mon_bleu}{RGB}{16,48,255}
 \definecolor{mon_vert}{RGB}{16,165,0}
-\usepackage{listings}
-\lstset{escapechar = §,%
-%        frameround=tttt, frame = lines, linewidth=0.95\textwidth,%
-        xleftmargin=0.025\textwidth,%
-        breaklines=true,% 
-        showstringspaces=false,%
-       }
+%--------------------------------------------------------------------------
+% Configuration des listings
 \lstset{
 literate = {à}{{\`a}}1
            {À}{{\`A}}1
@@ -166,59 +172,23 @@ literate = {à}{{\`a}}1
            {ù}{{\`u}}1
            {ÿ}{{\"y}}1
        }
-\renewcommand{\lstlistingname}{Programme}
-\lstset{tabsize = 4,%
-        language=caml,%
-       }
-\lstset{emph={List, Array, String},
-        morekeywords={when, failwith},
-        keywordstyle=\color{mon_orange},%
-        emphstyle=\bfseries\color{mon_bleu},%
-        commentstyle=\slshape,% 
-        stringstyle=\color{mon_vert},% 
-        basicstyle=\ttfamily\upshape
-       }
-\lstMakeShortInline@
-\lstdefinestyle{ocaml}{language = caml,
-                       tabsize=3,
-                       morekeywords = {failwith, false, not, ref, true, when},
-                       morekeywords = [2]{print_int, print_string, print_float, print_newline},
-                       emph={List, Array, String},
-                       basicstyle=\ttfamily\upshape,
-                       emphstyle=\bfseries\color{mon_bleu},
-                       commentstyle=\slshape,
+%--------------------------------------------------------------------------
+\lstset{language = caml,
+        tabsize=3,
+        morekeywords = {failwith, false, not, ref, true, when},
+        morekeywords = [2]{print_int, print_string, print_float, print_newline},
+        emph={List, Array, String, int, unit, float, list, array, bool, str},
+        basicstyle=\ttfamily\upshape,
+        emphstyle=\bfseries,
+        commentstyle=\slshape,
+        stringstyle=\itshape,
+        keywordstyle=\bfseries,
+        keywordstyle=\bfseries,
+        showstringspaces=false}
+\lstdefinestyle{ocaml}{emphstyle=\bfseries\color{mon_bleu},
                        stringstyle=\color{mon_vert},
                        keywordstyle=\color{mon_orange},,
-                       keywordstyle=[2]\color{mon_orange!50}}
-%--------------------------------------------------------------------------
-% Environnements 
-\usepackage[skins, listings, theorems, xparse]{tcolorbox}
-%---------------Définitions------------------------------------------------
-\newtcbtheorem[no counter]
-              {defin}% Nom de l'environnement
-              {} % pas de nom
-              {enhanced,
-               before skip=6mm,
-               colback=green!5,
-               colbacktitle=green!35!black,
-               colframe=green!35!black,
-               separator sign = {},
-               attach boxed title to top left = {},
-               fonttitle=\bfseries}
-              {def}
-%---------------Définitions de notation---------------------------------
-\def\poser#1#2{
-\begin{tcolorbox}[colback=blue!5,
-                  colframe=blue!35!black, 
-                  sidebyside, 
-                  lefthand width = 15mm,
-                  lower separated=false,
-                  sidebyside gap=0mm]
-#1
-\tcblower
-#2
-\end{tcolorbox}}
-
+                       keywordstyle=[2]\color{mon_orange!50!black}}
 %---------------Code en passant-----------------------------------------
 \DeclareTCBListing[no counter]
                   {ocaml}
@@ -228,7 +198,7 @@ literate = {à}{{\`a}}1
                    colback=yellow!5,
                    colframe=yellow!40!black,
                    top = -2mm,
-                   left=-2mm,
+                   left= 0mm,
                    right=-3mm,
                    bottom=-2mm,
                    listing options = {style=ocaml},
@@ -237,7 +207,8 @@ literate = {à}{{\`a}}1
 
 %---------------Code titré numéroté-----------------------------------------
 \DeclareTCBListing[auto counter,
-                   number within=chapter]
+                   number within=chapter,
+                   list inside = codes]
                   {code}
                   { m }
                   {listing only,
@@ -247,13 +218,123 @@ literate = {à}{{\`a}}1
                    halign title=center,
                    top = -1mm,
                    right= -3mm,
-                   left=-1mm,
+                   left= 0mm,
                    bottom=-1mm,
                    listing options = {style=ocaml},
                    fonttitle=\bfseries,
-                   title={Code \thetcbcounter : #1}
+                   title={Code \thetcbcounter\ #1}
                   }
 
+%---------------Définitions------------------------------------------------
+\newtcbtheorem[no counter,
+               list inside = defs]
+              {defin}% Nom de l'environnement
+              {} % pas de nom
+              {enhanced,
+               before skip=6mm,
+               colback=green!5,
+               colbacktitle=green!40!black,
+               colframe=green!20!black,
+               separator sign = {},
+               attach boxed title to top left = {},
+               fonttitle=\bfseries}
+              {def}
+%---------------Définitions de notation---------------------------------
+\def\poser#1#2{\begin{tcolorbox}[colback=blue!5,
+                                 colframe=blue!35!black, 
+                                 sidebyside, 
+                                 lefthand width = 15mm,
+                                 lower separated=false,
+                                 sidebyside gap=0mm]
+                                #1
+                                \tcblower
+                                #2
+               \end{tcolorbox}}
+%---------------Théorèmes-----------------------------------------
+\newtcbtheorem[auto counter,
+                   number within=chapter,
+                   list inside = thms]
+                  {thm}
+                  {Théorème}
+                  {enhanced,
+                   colback=blue!5,
+                   colframe=blue!20!black,
+                   colbacktitle=blue!40!black,
+                   before skip=4mm,
+                   fonttitle=\bfseries,
+                   title={Théorème \thetcbcounter}
+                  }
+                  {def}
+
+%---------------Les exercices---------------------------------
+\tcbset{exostyle/.style= {enhanced jigsaw,
+                          interior hidden, 
+                          frame hidden,
+                          fonttitle=\sffamily\bfseries,
+                          coltitle=black, 
+                          breakable,
+                          before skip=2mm,
+                          after skip=4mm,
+                          top = -2mm,
+                          bottom = -2mm,
+                         }
+       }
+                         
+% NewTotalTColorBox crée une fonction (ici \Solution) qui crée une colorbox
+\NewTotalTColorBox{\ecrireSolution} % le nom
+                  {mm}% les variables, ici 2 variables obligatoires (mandatory)
+                      % la première est un indice
+                      % la seconde est le fichier à traiter
+                  {exostyle,
+                   phantomlabel={sol:#1}, % phantom car non numérotée
+                   title={Correction de l'exercice~\ref{exo:#1} page~\pageref{exo:#1}}
+                  }
+                  {\input{#2}} % Le contenu
+
+\newtcbtheorem[number within=section] 
+              {exo} % nom de l'environnement
+              {Exercice} % nom de la numérotation pour le titre
+              {exostyle,
+               borderline west = {2mm}{-1mm}{black!30},
+               separator sign = {\ },
+               label={exo:\thetcbcounter}, %référence
+               lowerbox=ignored, % on n'affiche pas la solution (seconde partie
+               savelowerto={exercice-\thetcbcounter.tex},% sauvegarde de la seconde partie
+               % l'argument du record est enregistré, il sera exécuté lors de sa lecture
+               % string convertit la suite ?
+               record={\string\ecrireSolution{\thetcbcounter}{exercice-\thetcbcounter.tex}},
+               after title = { (Solution page \pageref{sol:\thetcbcounter})}
+              }
+              {exo} % Préfixe des références, ici exo:xxx
+%---------------Les questions de problème---------------------------------
+% NewTotalTColorBox crée une fonction (ici \Solution) qui crée une colorbox
+\NewTotalTColorBox{\ecrireSolutionQuestion} % le nom
+                  {mm}% les variables, ici 2 variables obligatoires (m = mandatory)
+                      % la première est un indice
+                      % la seconde est le fichier à traiter
+                  {exostyle,
+                   phantomlabel={solques:#1}, % phantom car non numérotée
+                   title={Correction de la question~\ref{ques:#1} page~\pageref{ques:#1}}
+                  }
+                  {\input{#2}} % Le contenu
+
+\newtcbtheorem[number within=section] 
+              {question} 
+              {Question} 
+              {exostyle,
+               borderline west = {2mm}{-1mm}{black!30},
+               separator sign = {\ },
+               label={ques:\thetcbcounter},
+               lowerbox=ignored, 
+               savelowerto={question-\thetcbcounter.tex},
+               record={\string\ecrireSolutionQuestion{\thetcbcounter}{question-\thetcbcounter.tex}},
+               after title = { (Solution page \pageref{solques:\thetcbcounter})}
+              }
+              {ques} 
+%-------------------------------------------------------------------------------
+\newcommand{\reponse}{\tcblower}
+%-------------------------------------------------------------------------------
+\newcommand{\type}{\lstinline}
 %--------------------------------------------------------------------------
 % Diverses fonctions
 %--------------------------------------------------------------------------
@@ -264,10 +345,6 @@ literate = {à}{{\`a}}1
 \def\Q{{\mathbb Q}}
 \def\R{{\mathbb R}}
 \def\Z{{\mathbb Z}}
-%--------------------------------------------------------------------------
-% Python dans le texte
-\def\type#1{\text{\normalfont \ttfamily #1}}
-\def\Type#1{\text{\normalfont\bfseries\ttfamily #1}}
 %--------------------------------------------------------------------------
 % remplace les comparateurs avec égalité, une barre oblique
 \let\le=\leqslant 
@@ -280,12 +357,8 @@ literate = {à}{{\`a}}1
 %% S'il n'y a pas de solutions
 \def\chapitre#1{\input{#1}}
 %% S'il y a des solutions
-\newif\ifreponses % on crée un indicateur
-\reponsesfalse    % par défaut, pas de solutions
-\def\chapitreSol#1{
-\input{#1}
-\ifreponses
-     \newpage 
-     \section{Solutions} 
-     \shipoutAnswer
-\fi}
+\def\chapitreSol#1{\tcbstartrecording
+                   \input{#1}
+                   \newpage 
+                   \section{Solutions} 
+                   \tcbstoprecording\tcbinputrecords}

@@ -7,10 +7,10 @@
 % Personnalisations générales
 %-------------------------------------------------------------------------------
 % Indication du type de document
-\def\titre{Cours d'informatique} 
-% Pour changer le nom des composantes :
-%\addto\captionsfrench{\renewcommand{\chaptername}{le nom}}
+\def\titre{T.P. d'informatique}
+\addto\captionsfrench{\renewcommand{\chaptername}{T.P.}}
 % La syntaxe est compliquée car on a chargé babel
+\renewcommand{\thechapter}{\Alph{chapter}}
 %-------------------------------------------------------------------------------
 % Classe(s) concernée(s)
 \def\classe{Option informatique MP}
@@ -28,13 +28,7 @@
 \begin{document}
 \premierePage
 \tableofcontents
-\setcounter{chapter}{-1}
-\renewcommand{\thechapter}{\arabic{chapter}}
-\chapitre{00_Fonctionnel}
-\renewcommand{\thechapter}{\Roman{chapter}}
-\chapitreSol{01_ABR}
-\chapitreSol{02_Tas}
-\tcblistof[\chapter*]{defs}{Table des définitions}
-\tcblistof[\chapter*]{codes}{Table des codes}
-\tcblistof[\chapter*]{thms}{Table des théorèmes}
+\chapitreSol{01_Dessin_arbres}
+\chapitreSol{01_bis_interpreteur}
+
 \end{document}

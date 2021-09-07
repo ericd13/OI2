@@ -1,0 +1,368 @@
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\chapter{I bis -- Formules arithmétiques}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\thispagestyle{empty}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+{\sf 
+Dans ce TP nous allons interpréter les programmes dans un langage très simple : les expressions arithmétiques. Le but est de lire une expression arithmétique sous forme d'une chaîne de caractères et d'en calculer la valeur.
+
+Nous nous restreindrons au cas de valeurs entières positives (le cas des entiers négatifs est compliqué par le double sens du symbole "-") et des opérations "+", "-", "*" et "/".}
+
+{\bf Rappels}
+
+\begin{itemize}
+    \item Une chaîne de caractères est encadrée par des guillemets doubles : \type{"Bonjour"}.
+    \item Sa longueur est fournie par \type{String.length ch}.
+    \item Le caractère d'indice $i$ d'une chaîne est obtenu par \type{ch.[i]}.
+    \item Un caractère est encadré par des guillemets simples.
+    \item \type{Char.code} permet de renvoyer le code ascii d'un caractère.
+    \item pour calculer le chiffre représenté par un caractère entre \type{'0'} et \type{'9'}, on peut écrire 
+    
+    \type{Char.code c - Char.code '0'}. \type{'5'} donnera le chiffre 5.
+    \item \type{List.rev} permet de retourner une liste.
+\end{itemize}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Lexer}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+La première étape consiste à lire la chaîne de caractères et à la séparer en ses objets de bases appelés lexèmes : ce sera les entiers, les opérateurs et les parenthèses.
+
+On utilisera le type suivant :
+\begin{ocaml}
+type lexeme =  Nb of int (* les entiers *)
+              |Plus |Moins |Fois |Divise (* les opérateurs *)
+              |ParO |ParF;; (* les parenthèses *)
+\end{ocaml}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{question}{}{} 
+Écrire une fonction \type{lecture : string -> lexeme list} qui reçoit une chaîne de caractères et qui renvoie la liste des lexèmes associée. Les caractères qui ne correspondent pas à un lexème seront ignorés.
+\type{lecture "5*(41 + 3) a"} doit renvoyer
+\begin{ocaml}[]
+[Nb 5; Fois; ParO; Nb 41; Plus; Nb 3; ParF]
+\end{ocaml}
+
+\reponse
+
+\begin{ocaml}
+let c0 = Char.code '0';;
+let add k liste =
+    if k = 0 
+    then liste
+    else (Nb k) :: liste;;
+
+let lecture texte =
+   let n = String.length texte in
+   let rec lire i k fait =
+      if i = n
+      then add k fait
+      else match texte.[i] with
+           |c when Char.code c >= c0 && Char.code c <= c0 + 9
+                -> lire (i+1) (10*k + Char.code c - c0) fait
+           |'+' -> lire (i+1) 0 (Plus   :: (add k fait))
+           |'-' -> lire (i+1) 0 (Moins  :: (add k fait))
+           |'*' -> lire (i+1) 0 (Fois   :: (add k fait))
+           |'/' -> lire (i+1) 0 (Divise :: (add k fait))
+           |'(' -> lire (i+1) 0 (ParO   :: (add k fait))
+           |')' -> lire (i+1) 0 (ParF   :: (add k fait))
+           |_   -> lire (i+1) 0 (add k fait) in
+   List.rev (lire 0 0 []);;
+
+\end{ocaml}
+\end{question}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\section{Notation polonaise inversée}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+En 1920 le mathématicien polonais Jan Lukasiewicz propose la notation pré-fixé (ou polonaise) qui consiste à considérer les opérations comme des opérateurs à 2 variables, $7 + 11$ s'écrit $+\; 7\; 11$. L'avantage est que les parenthèses deviennent inutiles :
+
+
+ $(7-2).\sin(2x+\pi/3)$ devient
+$*\; -\; 7\; 2\; \sin \; +\; *\; 2\; x\; /\; \pi\; 3$.
+
+Elle a été diffusée dans le public comme interface utilisateur avec les calculatrices de bureau de Hewlett-Packard (HP-9100), puis avec la calculatrice scientifique HP-35 en 1972.
+
+Elle consiste simplement à placer l'opérateur {\bf après} les deux opérandes, \type{"7 + 11"} s'écrit \type{"7 11 +"}. L'expression \type{"32 - 2*((7 / 2)*3 - 12)"} peut s'écrire
+\type{"32 2 7 2 / 3 * 12 - * -"}
+
+L'avantage est que, combinée à une pile, cette notation permet d'effectuer les calculs sans faire référence à une quelconque adresse mémoire. 
+
+\begin{itemize}
+\item On lit l'expression terme-à-terme :
+
+\item si on lit une valeur numérique, elle est empilée, 
+
+\item si on lit une opération $\clubsuit$, 
+
+on dépile les deux derniers opérandes $a$ et $b$ 
+
+et on empile le résultat du calcul $a\ \clubsuit\ b$.
+\end{itemize}	
+{\bf Un exemple}
+On part de l'expression \type{"32 2 7 2 / 3 * 12 - * -"} :
+
+\begin{center}
+\begin{tabular}{|c|l|ccccc|}
+Lecture&Action&\multicolumn{5}{c}{Pile}\\
+\hline
+&On crée une pile vide & & & & & \\
+\hline
+32&On empile & 32 & & & & \\
+2&On empile & 32 &2 & & & \\
+7&On empile & 32 &2 &7 & & \\
+2&On empile & 32 &2 &7 &2 &\ \\
+$/$&On dépile 2 éléments& 3 &2 & & &\ \\
+&On empile $7/2$& 32 &2 &3 & &\ \\
+3&On empile & 32 &2 &3 &3 &\ \\
+$*$&On dépile 2 éléments& 32 &2 & & &\ \\
+&On empile $3*3$& 32 &2 &9 & &\ \\
+12&On empile & 32 &2 &9 &12 &\ \\
+-&On dépile 2 éléments& 32 &2 & & &\ \\
+&On empile $9-12$& 32 &2 & &-3 &\ \\
+$*$&On dépile 2 éléments&32 & & & &\ \\
+&On empile $2*(-3)$&32 &-6 & & &\ \\
+$-$&On dépile 2 éléments& & & & &\ \\
+&On empile $32-(-6)$&38 & & & &\ \\
+\hline
+&On dépile le résultat : 38& & & & &\ \\
+\hline
+\end{tabular}
+\end{center}
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{question}{}{}
+Définir un type \type{pile} pour une pile {\bf impérative} et écrire les fonctions \type{créerPile}, \type{estrPileVide}, \type{empiler}, \type{voir} et \type{depiler}. \type{depiler} devra enlever l'élément au sommet de la pile {\bf et} le renvoyer en même temps.
+
+\reponse
+
+\begin{ocaml}
+type 'a pile = {contenu = 'a list};;
+
+let creerPile () = {contenu = []};;
+
+let estPileVide pile =
+   pile.contenu = [];;
+
+let empiler x pile = 
+   pile.contenu  <- x :: pile.contenu;;
+   
+let depiler pile = 
+   match pile.contenu with
+   |[] -> failwith "La pile est vide"
+   |t::q -> pile.contenu <- q;
+            t;;
+            
+let voir pile = List.hd pile.contenu;;
+\end{ocaml}
+% On pourra aussi utiliser une pile persistante.
+% \begin{ocaml}
+% let creerPile () = [];;
+
+% let empiler x pile = x::pile;;
+
+% let dépiler pile = 
+%   match pile with
+%   |[] -> failwith "La pile est vide"
+%   |t::q -> t, q;;
+% \end{ocaml}
+\newpage
+\end{question}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{question}{}{}
+Écrire une fonction \type{calculNPI : string -> int} qui calcule la valeur d'une expression {\bf écrite au format NPI} dans une liste de lexèmes et qui calcule sa valeur.
+
+\reponse
+
+\begin{ocaml}
+let depiler2 pile =
+    let b = depiler pile in
+    let a = depiler pile in
+    a, b;;
+
+let calculNPI liste =
+   let pile = creerPile () in
+   let rec traiter liste =
+      match liste with
+      |[] -> depiler pile
+      |(Nb k)::q -> empiler k pile;
+                    traiter q
+      |Plus::q -> let a, b = depiler2 pile in 
+                  empiler (a+b) pile;
+                  traiter q 
+      |Moins::q -> let a, b = depiler2 pile in 
+                   empiler (a-b) pile;
+                   traiter q
+      |Fois::q -> let a, b = depiler2 pile in 
+                  empiler (a*b) pile;
+                  traiter q
+      |Divise::q -> let a, b = depiler2 pile in 
+                    empiler (a/b) pile;
+                    traiter q
+       |_::q -> traiter q  in   
+   traiter liste;;        
+\end{ocaml}
+% Si on utilise une pile persistante, il faut alors l'envoyer comme paramètre.
+% \begin{ocaml}
+% let depiler2 pile =
+%     let b, pile1 = depiler pile in
+%     let a, pile2 = depiler pile1 in
+%     a, b, pile2;;
+
+% let calculerNPI texte =
+%   let rec traiter liste pile =
+%       match liste with
+%       |[] -> fst (depiler pile)
+%       |(Nb k)::q -> traiter q (empiler k pile)
+%       |Plus::q -> let a, b, pile1 = depiler2 pile in 
+%                   traiter q (empiler (a+b) pile1)
+%       |Moins::q -> let a, b, pile1 = depiler2 pile in 
+%                   traiter q (empiler (a-b) pile1)
+%       |Fois::q -> let a, b, pile1 = depiler2 pile in 
+%                   traiter q (empiler (a*b) pile1)
+%       |Divise::q -> let a, b, pile1 = depiler2 pile in 
+%                     traiter q (empiler (a/b) pile1)
+%       |_::q -> traiter q pile in   
+%   traiter (lecture texte) (creerPile ());;        
+% \end{ocaml}
+% \newpage
+\end{question}
+%-------------------------------------------------------------------------------
+\newpage
+%-------------------------------------------------------------------------------
+\section{Cas général}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+Le procédé ci-dessus demande d'écrire la formule mathématique en notation N.P.I. ce qui n'est pas pratique. Nous allons maintenant traduire une formule "normale" en une formule N.P.I.
+
+Pour cela on aura à gérer la priorité des opérations :
+
+\type{"3 + 4 * 5"} est traduit en \type{"3 4 5 * +"} alors que
+\type{"3 * 4 + 5"} est traduit en \type{"3 4 * 5 +"}
+
+On donne la priorité 1 aux opérations $+$ et $-$ et la priorité 2 aux opérations $*$ et $/$.
+
+\medskip
+
+Pour traduire une formule on effectue les opérations suivantes.
+\begin{itemize}
+\item On lit la formule terme-à-terme :
+
+\item on crée une pile vide :
+
+\item si on lit une valeur numérique, elle est ajoutée à la sortie, 
+
+\item si on lit une opération $\clubsuit$, on dépile les opérations de priorité supérieure ou égale à celle de $\clubsuit$ et on les ajoute à la sortie, on empile ensuite $\clubsuit$,
+
+\item si on lit une parenthèse ouvrante on l'empile, 
+
+\item si on lit une parenthèse fermante, on dépile et on ajoute à la sortie toutes les opérations jusqu'à ce qu'on trouve une parenthèse ouvrante, on dépile cette parenthèse ouvrante.
+
+\item Quand on a lu tous les lexèmes, on dépile et on ajoute à la sortie toutes les opérations resytantes.
+
+\item La sortie est une liste que l'on doit renverser pour obtenir la formule N.P.I.
+\end{itemize}	
+
+{\bf Un exemple}
+On part de l'expression \type{"2*(11-2+3*2)"} qui a été transcrite en 
+\begin{ocaml}[]
+[Nb 2; Fois; ParO; Nb 11; Moins; Nb 2; Plus; 
+                                 Nb 3; Fois; Nb 2; ParF]
+\end{ocaml}
+
+Pour des raisons de place on écrit les lexèmes sous forme "naturelle" dans la pile et la sortie.
+\begin{center}
+\begin{tabular}{|c|cccc|r|}
+Lecture&\multicolumn{4}{c}{Pile}&Sortie\\
+\hline
+\texttt{Nb 2} &&&&&\texttt{[2]}\\
+\texttt{Fois}&\texttt{(*, 2)}&&&&\texttt{[2]}\\
+\texttt{ParO}&\texttt{(*, 2)}&\texttt{((, 0)}&&&\texttt{[2]}\\
+\texttt{Nb 11}&\texttt{(*, 2)}&\texttt{((, 0)}&&&\texttt{[11; 2]}\\
+\texttt{Moins}&\texttt{(*, 2)}&\texttt{((, 0)}&\texttt{(-, 1)}&&\texttt{[11; 2]}\\
+\texttt{Nb 2}&\texttt{(*, 2)}&\texttt{((, 0)}&\texttt{(-, 1)}&&\texttt{[2; 11; 2]}\\
+\texttt{Plus}&\texttt{(*, 2)}&\texttt{((, 0)}&\texttt{(+, 1)}&&\texttt{[-; 2; 11; 2]}\\
+\texttt{Nb 3}&\texttt{(*, 2)}&\texttt{((, 0)}&\texttt{(+, 1)}&&\texttt{[3; -; 2; 11; 2]}\\
+\texttt{Fois}&\texttt{(*, 2)}&\texttt{((, 0)}&\texttt{(+, 1)}&\texttt{(*, 2)}&\texttt{[3; -; 2; 11; 2]}\\
+\texttt{Nb 2}&\texttt{(*, 2)}&\texttt{((, 0)}&\texttt{(+, 1)}&\texttt{(*, 2)}&\texttt{[2; 3; -; 2; 11; 2]}\\
+\texttt{ParF}&\texttt{(*, 2)}&&&&\texttt{[+; *; 2; 3; -; 2; 11; 2]}\\
+\hline
+&&&&&\texttt{[*; +; *; 2; 3; -; 2; 11; 2]}\\
+\hline
+\end{tabular}
+\end{center}
+La notation N.P.I. est donc 
+\begin{ocaml}[]
+[Nb 2; Nb 11; Nb 2; Moins; Nb 3; Nb 2; Fois; Plus; Fois]
+\end{ocaml}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{question}{}{}
+Écrire une fonction \type{convertirNPI : lexeme list -> lexeme list} qui convertit une liste de lexèmes qui exprime une expression sous forme naturelle en une liste de lexèmes qui exprime une expression sous forme N.P.I.
+
+\reponse
+
+\begin{ocaml}
+let sortir prio pile out =
+    while not (estPileVide pile) && snd (voir pile) >= prio do
+       empiler (fst (depiler pile)) out done;;  
+       
+let vider pile =
+   let rec transfert pile out =
+      if estPileVide pile
+      then out
+      else let x = depiler pile in transfert pile (x::out)
+   in transfert pile [];;  
+\end{ocaml}
+\newpage           
+\begin{ocaml}
+let convertirNPI liste =
+   let ope = creerPile () in
+   let out = creerPile () in
+   let rec traiter liste =
+      match liste with
+      |(Nb k)::reste -> empiler (Nb k) out; 
+                        traiter reste
+      |Plus::reste -> sortir 1 ope out;
+                      empiler (Plus, 1) ope;
+                      traiter reste
+      |Moins::reste -> sortir 1 ope out;
+                       empiler (Moins, 1) ope;
+                       traiter reste
+      |Fois::reste -> sortir 2 ope out;
+                      empiler (Fois, 2) ope;
+                      traiter reste
+      |Divise::reste -> sortir 2 ope out;
+                        empiler (Divise, 1) ope;
+                        traiter reste
+      |ParO::reste -> empiler (ParO, 0) ope; 
+                      traiter reste
+      |ParF::reste -> sortir 1 ope out;
+                      let _ = depiler ope in traiter reste
+      |[] -> sortir 1 ope out;
+             vider out
+   in traiter liste;;
+\end{ocaml}
+\end{question}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{question}{}{}
+En déduire une fonction \type{calcul : string -> int} qui calcule la valeur d'une expression naturelle dans une chaîne de caractères et qui calcule sa valeur.
+
+\reponse
+
+\begin{ocaml}
+let calcul ch =
+   calculNPI (convertirNPI (lecture ch));;
+\end{ocaml}
+\end{question}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
